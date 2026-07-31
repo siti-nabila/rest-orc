@@ -1,33 +1,34 @@
 package app
 
 import (
-	"errors"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/healthcheck"
 	recovermw "github.com/gofiber/fiber/v3/middleware/recover"
+	authdictionary "github.com/siti-nabila/api-contracts/pkg/dictionary/auth"
+	commondictionary "github.com/siti-nabila/api-contracts/pkg/dictionary/common"
 	"github.com/siti-nabila/rest-orc/internal/config"
+	"github.com/siti-nabila/rest-orc/internal/response"
 )
 
-const internalErrorMessage = "internal server error"
-
-type errorResponse struct {
-	Error string `json:"error"`
-}
-
 func newHTTPServer(cfg *config.Config) *fiber.App {
+	responseWriter := response.NewWriter(response.NewErrorMapper(
+		authdictionary.Registry(),
+		commondictionary.Registry(),
+	))
 	httpServer := fiber.New(fiber.Config{
 		AppName:      cfg.App.Name,
 		ReadTimeout:  cfg.Server.ReadTimeout.Duration,
 		WriteTimeout: cfg.Server.WriteTimeout.Duration,
 		IdleTimeout:  cfg.Server.IdleTimeout.Duration,
-		ErrorHandler: handleHTTPError,
+		ErrorHandler: func(ctx fiber.Ctx, err error) error {
+			return responseWriter.Write(ctx, response.Result{Err: err})
+		},
 	})
 
 	httpServer.Use(recovermw.New(recovermw.Config{
 		EnableStackTrace: false,
 		PanicHandler: func(fiber.Ctx, any) error {
-			return fiber.ErrInternalServerError
+			return commondictionary.ErrInternalServerError
 		},
 	}))
 	httpServer.Get(
@@ -36,19 +37,4 @@ func newHTTPServer(cfg *config.Config) *fiber.App {
 	)
 
 	return httpServer
-}
-
-func handleHTTPError(ctx fiber.Ctx, err error) error {
-	status := fiber.StatusInternalServerError
-	message := internalErrorMessage
-
-	var fiberErr *fiber.Error
-	if errors.As(err, &fiberErr) {
-		status = fiberErr.Code
-		if status < fiber.StatusInternalServerError {
-			message = fiberErr.Message
-		}
-	}
-
-	return ctx.Status(status).JSON(errorResponse{Error: message})
 }
