@@ -35,8 +35,7 @@ func (mapper *ErrorMapper) Map(
 		return mapper.mapGRPCError(decoded, language)
 	}
 
-	var applicationError *dictionary.Error
-	if errors.As(err, &applicationError) {
+	if applicationError, ok := errors.AsType[*dictionary.Error](err); ok {
 		return descriptionError(
 			applicationError.HTTPStatus(),
 			applicationError.Code(),
@@ -44,8 +43,7 @@ func (mapper *ErrorMapper) Map(
 		)
 	}
 
-	var fiberError *fiber.Error
-	if errors.As(err, &fiberError) {
+	if fiberError, ok := errors.AsType[*fiber.Error](err); ok {
 		return mapper.mapFiberError(fiberError, language)
 	}
 

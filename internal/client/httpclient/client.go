@@ -2,7 +2,6 @@ package httpclient
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/siti-nabila/rest-orc/internal/client/tlsconfig"
 	"github.com/siti-nabila/rest-orc/internal/config"
+	"github.com/siti-nabila/rest-orc/pkg/dictionary"
 )
 
 type Client struct {
@@ -63,7 +63,7 @@ func NewTransport(cfg config.HTTPClientConfig) (*http.Transport, error) {
 
 	tlsConfig, err := tlsconfig.New(cfg.TLS)
 	if err != nil {
-		return nil, fmt.Errorf("configure HTTP client TLS: %w", err)
+		return nil, dictionary.ConfigureHTTPClientTLS(err)
 	}
 	transport.TLSClientConfig = tlsConfig
 	return transport, nil
@@ -74,27 +74,21 @@ func NewWithRoundTripper(
 	roundTripper http.RoundTripper,
 ) (*Client, error) {
 	if roundTripper == nil {
-		return nil, fmt.Errorf("create HTTP client: round tripper must not be nil")
+		return nil, dictionary.ErrHTTPRoundTripperRequired
 	}
 
 	baseURL, err := url.Parse(cfg.BaseURL)
 	if err != nil {
-		return nil, fmt.Errorf("parse HTTP client base URL %q: %w", cfg.BaseURL, err)
+		return nil, dictionary.ParseHTTPClientBaseURL(cfg.BaseURL, err)
 	}
 	if !baseURL.IsAbs() || baseURL.Host == "" {
-		return nil, fmt.Errorf("parse HTTP client base URL %q: URL must be absolute", cfg.BaseURL)
+		return nil, dictionary.AbsoluteHTTPClientBaseURLRequired(cfg.BaseURL)
 	}
 	if baseURL.Scheme != "http" && baseURL.Scheme != "https" {
-		return nil, fmt.Errorf(
-			"parse HTTP client base URL %q: scheme must be http or https",
-			cfg.BaseURL,
-		)
+		return nil, dictionary.UnsupportedHTTPClientBaseURLScheme(cfg.BaseURL)
 	}
 	if cfg.TLS.Enabled != (baseURL.Scheme == "https") {
-		return nil, fmt.Errorf(
-			"create HTTP client: TLS enabled setting does not match base URL scheme %q",
-			baseURL.Scheme,
-		)
+		return nil, dictionary.HTTPClientTLSSchemeMismatch(baseURL.Scheme)
 	}
 
 	closeTransport := func() {}
@@ -112,13 +106,13 @@ func NewWithRoundTripper(
 
 func (c *Client) Do(ctx context.Context, request *http.Request) (*http.Response, error) {
 	if ctx == nil {
-		return nil, fmt.Errorf("execute HTTP request: context must not be nil")
+		return nil, dictionary.ErrHTTPRequestContextRequired
 	}
 	if request == nil {
-		return nil, fmt.Errorf("execute HTTP request: request must not be nil")
+		return nil, dictionary.ErrHTTPRequestRequired
 	}
 	if request.URL == nil {
-		return nil, fmt.Errorf("execute HTTP request: request URL must not be nil")
+		return nil, dictionary.ErrHTTPRequestURLRequired
 	}
 
 	requestContext, cancel := context.WithTimeout(ctx, c.requestTimeout)
@@ -131,11 +125,11 @@ func (c *Client) Do(ctx context.Context, request *http.Request) (*http.Response,
 	response, err := c.httpClient.Do(outbound)
 	if err != nil {
 		cancel()
-		return nil, fmt.Errorf("execute HTTP request: %w", err)
+		return nil, dictionary.ExecuteHTTPRequest(err)
 	}
 	if response.Body == nil {
 		cancel()
-		return nil, fmt.Errorf("execute HTTP request: response body must not be nil")
+		return nil, dictionary.ErrHTTPResponseBodyRequired
 	}
 	response.Body = &cancelReadCloser{
 		ReadCloser: response.Body,

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/siti-nabila/rest-orc/internal/config"
+	"github.com/siti-nabila/rest-orc/pkg/dictionary"
 	"github.com/siti-nabila/rest-orc/tests/config/fixtures"
 	"github.com/siti-nabila/rest-orc/tests/shared/testutils"
 )
@@ -44,6 +45,14 @@ func All() []testutils.Scenario {
 		{
 			Name: "validation failure preserves typed error",
 			Run:  validationFailurePreservesTypedError,
+		},
+		{
+			Name: "validation failure preserves registered problem",
+			Run:  validationFailurePreservesRegisteredProblem,
+		},
+		{
+			Name: "keepalive validation preserves parameterized minimum",
+			Run:  keepaliveValidationPreservesParameterizedMinimum,
 		},
 	}
 }
@@ -168,12 +177,43 @@ func validationFailurePreservesTypedError(t *testing.T) {
 	if err == nil {
 		t.Fatal("Load() error = nil, want error")
 	}
-	var validationErr *config.ValidationError
-	if !errors.As(err, &validationErr) {
-		t.Fatalf("Load() error type = %T, want *config.ValidationError", err)
+	validationErr, ok := errors.AsType[*dictionary.ValidationError](err)
+	if !ok {
+		t.Fatalf("Load() error type = %T, want *dictionary.ValidationError", err)
 	}
 	if validationErr.Field != "app.name" {
 		t.Errorf("ValidationError.Field = %q, want app.name", validationErr.Field)
+	}
+}
+
+func validationFailurePreservesRegisteredProblem(t *testing.T) {
+	// Arrange
+	fixtures.ClearConfigurationEnvironment(t)
+	path := fixtures.Write(t, fixtures.WithEmptyAppName())
+
+	// Act
+	_, err := config.Load(path)
+
+	// Assert
+	if !errors.Is(err, dictionary.ErrValueRequired) {
+		t.Errorf("Load() error = %v, want ErrValueRequired in error chain", err)
+	}
+}
+
+func keepaliveValidationPreservesParameterizedMinimum(t *testing.T) {
+	// Arrange
+	fixtures.ClearConfigurationEnvironment(t)
+	path := fixtures.Write(t, fixtures.WithAggressiveGRPCKeepalive())
+
+	// Act
+	_, err := config.Load(path)
+
+	// Assert
+	if !errors.Is(err, dictionary.ErrMinimumDurationWhenEnabled) {
+		t.Errorf(
+			"Load() error = %v, want ErrMinimumDurationWhenEnabled in error chain",
+			err,
+		)
 	}
 }
 

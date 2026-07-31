@@ -1,32 +1,24 @@
 package config
 
 import (
-	"fmt"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/siti-nabila/rest-orc/pkg/dictionary"
 )
 
 const minimumGRPCKeepaliveTime = 5 * time.Minute
 
-type ValidationError struct {
-	Field   string
-	Problem string
-}
-
-func (e *ValidationError) Error() string {
-	return fmt.Sprintf("invalid configuration field %s: %s", e.Field, e.Problem)
-}
-
 func (cfg *Config) Validate() error {
 	if strings.TrimSpace(cfg.App.Name) == "" {
-		return validationError("app.name", "must not be empty")
+		return dictionary.NewValidationError("app.name", dictionary.ErrValueRequired)
 	}
 	if strings.TrimSpace(cfg.App.Env) == "" {
-		return validationError("app.env", "must not be empty")
+		return dictionary.NewValidationError("app.env", dictionary.ErrValueRequired)
 	}
 	if cfg.App.Port < 1 || cfg.App.Port > 65535 {
-		return validationError("app.port", "must be between 1 and 65535")
+		return dictionary.NewValidationError("app.port", dictionary.ErrPortOutOfRange)
 	}
 
 	serverDurations := []struct {
@@ -40,7 +32,7 @@ func (cfg *Config) Validate() error {
 	}
 	for _, item := range serverDurations {
 		if item.value.Duration <= 0 {
-			return validationError(item.field, "must be greater than zero")
+			return dictionary.NewValidationError(item.field, dictionary.ErrValueNotPositive)
 		}
 	}
 
@@ -52,27 +44,27 @@ func (cfg *Config) Validate() error {
 
 func (cfg GRPCClientConfig) validate(fieldPrefix string) error {
 	if strings.TrimSpace(cfg.Target) == "" {
-		return validationError(fieldPrefix+".target", "must not be empty")
+		return dictionary.NewValidationError(fieldPrefix+".target", dictionary.ErrValueRequired)
 	}
 	if cfg.RequestTimeout.Duration <= 0 {
-		return validationError(fieldPrefix+".request_timeout", "must be greater than zero")
+		return dictionary.NewValidationError(fieldPrefix+".request_timeout", dictionary.ErrValueNotPositive)
 	}
 	if cfg.MaxReceiveMessageBytes <= 0 {
-		return validationError(fieldPrefix+".max_receive_message_bytes", "must be greater than zero")
+		return dictionary.NewValidationError(fieldPrefix+".max_receive_message_bytes", dictionary.ErrValueNotPositive)
 	}
 	if cfg.MaxSendMessageBytes <= 0 {
-		return validationError(fieldPrefix+".max_send_message_bytes", "must be greater than zero")
+		return dictionary.NewValidationError(fieldPrefix+".max_send_message_bytes", dictionary.ErrValueNotPositive)
 	}
 	if cfg.Keepalive.Time.Duration <= 0 {
-		return validationError(fieldPrefix+".keepalive.time", "must be greater than zero")
+		return dictionary.NewValidationError(fieldPrefix+".keepalive.time", dictionary.ErrValueNotPositive)
 	}
 	if cfg.Keepalive.Timeout.Duration <= 0 {
-		return validationError(fieldPrefix+".keepalive.timeout", "must be greater than zero")
+		return dictionary.NewValidationError(fieldPrefix+".keepalive.timeout", dictionary.ErrValueNotPositive)
 	}
 	if cfg.Keepalive.Enabled && cfg.Keepalive.Time.Duration < minimumGRPCKeepaliveTime {
-		return validationError(
+		return dictionary.NewValidationError(
 			fieldPrefix+".keepalive.time",
-			fmt.Sprintf("must be at least %s when enabled", minimumGRPCKeepaliveTime),
+			dictionary.MinimumDurationWhenEnabled(minimumGRPCKeepaliveTime),
 		)
 	}
 	return nil
@@ -81,40 +73,36 @@ func (cfg GRPCClientConfig) validate(fieldPrefix string) error {
 func (cfg HTTPClientConfig) validate(fieldPrefix string) error {
 	parsed, err := url.Parse(cfg.BaseURL)
 	if err != nil || parsed.Host == "" {
-		return validationError(fieldPrefix+".base_url", "must be an absolute URL")
+		return dictionary.NewValidationError(fieldPrefix+".base_url", dictionary.ErrAbsoluteURLRequired)
 	}
 	if parsed.Scheme != "http" && parsed.Scheme != "https" {
-		return validationError(fieldPrefix+".base_url", "scheme must be http or https")
+		return dictionary.NewValidationError(fieldPrefix+".base_url", dictionary.ErrUnsupportedURLScheme)
 	}
 	if cfg.TLS.Enabled && parsed.Scheme != "https" {
-		return validationError(fieldPrefix+".tls.enabled", "requires an https base_url")
+		return dictionary.NewValidationError(fieldPrefix+".tls.enabled", dictionary.ErrHTTPSRequired)
 	}
 	if !cfg.TLS.Enabled && parsed.Scheme == "https" {
-		return validationError(fieldPrefix+".tls.enabled", "must be true for an https base_url")
+		return dictionary.NewValidationError(fieldPrefix+".tls.enabled", dictionary.ErrTLSEnabledForHTTPS)
 	}
 	if cfg.RequestTimeout.Duration <= 0 {
-		return validationError(fieldPrefix+".request_timeout", "must be greater than zero")
+		return dictionary.NewValidationError(fieldPrefix+".request_timeout", dictionary.ErrValueNotPositive)
 	}
 
 	keepalive := cfg.Keepalive
 	if keepalive.MaxIdleConnections <= 0 {
-		return validationError(fieldPrefix+".keepalive.max_idle_connections", "must be greater than zero")
+		return dictionary.NewValidationError(fieldPrefix+".keepalive.max_idle_connections", dictionary.ErrValueNotPositive)
 	}
 	if keepalive.MaxIdleConnectionsPerHost <= 0 {
-		return validationError(fieldPrefix+".keepalive.max_idle_connections_per_host", "must be greater than zero")
+		return dictionary.NewValidationError(fieldPrefix+".keepalive.max_idle_connections_per_host", dictionary.ErrValueNotPositive)
 	}
 	if keepalive.MaxConnectionsPerHost <= 0 {
-		return validationError(fieldPrefix+".keepalive.max_connections_per_host", "must be greater than zero")
+		return dictionary.NewValidationError(fieldPrefix+".keepalive.max_connections_per_host", dictionary.ErrValueNotPositive)
 	}
 	if keepalive.IdleConnectionTimeout.Duration <= 0 {
-		return validationError(fieldPrefix+".keepalive.idle_connection_timeout", "must be greater than zero")
+		return dictionary.NewValidationError(fieldPrefix+".keepalive.idle_connection_timeout", dictionary.ErrValueNotPositive)
 	}
 	if keepalive.ResponseHeaderTimeout.Duration <= 0 {
-		return validationError(fieldPrefix+".keepalive.response_header_timeout", "must be greater than zero")
+		return dictionary.NewValidationError(fieldPrefix+".keepalive.response_header_timeout", dictionary.ErrValueNotPositive)
 	}
 	return nil
-}
-
-func validationError(field, problem string) error {
-	return &ValidationError{Field: field, Problem: problem}
 }

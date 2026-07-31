@@ -1,9 +1,10 @@
 package config
 
 import (
-	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/siti-nabila/rest-orc/pkg/dictionary"
 )
 
 type lookupEnvironment func(string) (string, bool)
@@ -126,5 +127,5 @@ func durationOverride(lookup lookupEnvironment, key string, target *Duration) er
 }
 
 func environmentError(key, value string, cause error) error {
-	return fmt.Errorf("parse environment variable %s=%q: %w", key, value, cause)
+	return dictionary.ParseEnvironmentVariable(key, value, cause)
 }

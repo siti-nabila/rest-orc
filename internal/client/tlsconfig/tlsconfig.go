@@ -3,10 +3,10 @@ package tlsconfig
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"os"
 
 	"github.com/siti-nabila/rest-orc/internal/config"
+	"github.com/siti-nabila/rest-orc/pkg/dictionary"
 )
 
 func New(cfg config.TLSConfig) (*tls.Config, error) {
@@ -20,18 +20,18 @@ func New(cfg config.TLSConfig) (*tls.Config, error) {
 
 	certificates, err := os.ReadFile(cfg.CAFile)
 	if err != nil {
-		return nil, fmt.Errorf("read TLS CA file %q: %w", cfg.CAFile, err)
+		return nil, dictionary.ReadTLSCAFile(cfg.CAFile, err)
 	}
 
 	roots, err := x509.SystemCertPool()
 	if err != nil {
-		return nil, fmt.Errorf("load system certificate pool: %w", err)
+		return nil, dictionary.LoadSystemCertificatePool(err)
 	}
 	if roots == nil {
 		roots = x509.NewCertPool()
 	}
 	if ok := roots.AppendCertsFromPEM(certificates); !ok {
-		return nil, fmt.Errorf("parse TLS CA file %q: no certificates found", cfg.CAFile)
+		return nil, dictionary.TLSCACertificatesRequired(cfg.CAFile)
 	}
 
 	tlsConfig.RootCAs = roots

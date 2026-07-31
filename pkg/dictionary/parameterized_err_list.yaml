@@ -1,0 +1,130 @@
+errors:
+  minimum_duration_when_enabled:
+    code: CFG008
+    en: must be at least %s when enabled
+    id: harus minimal %s ketika diaktifkan
+
+  invalid_configuration_field:
+    code: CFG009
+    en: "invalid configuration field %s: %v"
+    id: "field konfigurasi %s tidak valid: %v"
+
+  load_application_configuration:
+    code: APP003
+    en: "load application configuration: %v"
+    id: "memuat konfigurasi aplikasi: %v"
+
+  create_application:
+    code: APP004
+    en: "create application: %v"
+    id: "membuat aplikasi: %v"
+
+  listen_http_server:
+    code: APP005
+    en: "listen HTTP server on %s: %v"
+    id: "menjalankan HTTP server pada %s: %v"
+
+  shutdown_http_server:
+    code: APP006
+    en: "shutdown HTTP server: %v"
+    id: "menghentikan HTTP server: %v"
+
+  close_auth_grpc_connection:
+    code: APP007
+    en: "close auth gRPC connection: %v"
+    id: "menutup koneksi gRPC auth: %v"
+
+  close_application:
+    code: APP008
+    en: "close application: %v"
+    id: "menutup aplikasi: %v"
+
+  open_configuration:
+    code: CFG010
+    en: "open configuration %q: %v"
+    id: "membuka konfigurasi %q: %v"
+
+  decode_configuration:
+    code: CFG011
+    en: "decode configuration %q: %v"
+    id: "mendekode konfigurasi %q: %v"
+
+  close_configuration:
+    code: CFG012
+    en: "close configuration %q: %v"
+    id: "menutup konfigurasi %q: %v"
+
+  parse_environment_variable:
+    code: CFG013
+    en: "parse environment variable %s=%q: %v"
+    id: "mengurai environment variable %s=%q: %v"
+
+  decode_duration:
+    code: CFG014
+    en: "decode duration: %v"
+    id: "mendekode durasi: %v"
+
+  parse_duration:
+    code: CFG015
+    en: "parse duration %q: %v"
+    id: "mengurai durasi %q: %v"
+
+  configure_http_client_tls:
+    code: HTTP006
+    en: "configure HTTP client TLS: %v"
+    id: "mengonfigurasi TLS HTTP client: %v"
+
+  parse_http_client_base_url:
+    code: HTTP007
+    en: "parse HTTP client base URL %q: %v"
+    id: "mengurai base URL HTTP client %q: %v"
+
+  absolute_http_client_base_url_required:
+    code: HTTP008
+    en: "parse HTTP client base URL %q: URL must be absolute"
+    id: "mengurai base URL HTTP client %q: URL harus absolut"
+
+  unsupported_http_client_base_url_scheme:
+    code: HTTP009
+    en: "parse HTTP client base URL %q: scheme must be http or https"
+    id: "mengurai base URL HTTP client %q: skema harus http atau https"
+
+  http_client_tls_scheme_mismatch:
+    code: HTTP010
+    en: "create HTTP client: TLS enabled setting does not match base URL scheme %q"
+    id: "membuat HTTP client: pengaturan TLS tidak sesuai dengan skema base URL %q"
+
+  execute_http_request:
+    code: HTTP011
+    en: "execute HTTP request: %v"
+    id: "menjalankan HTTP request: %v"
+
+  create_grpc_client:
+    code: GRPC001
+    en: "create gRPC client for target %q: %v"
+    id: "membuat gRPC client untuk target %q: %v"
+
+  close_grpc_client:
+    code: GRPC002
+    en: "close gRPC client: %v"
+    id: "menutup gRPC client: %v"
+
+  configure_grpc_client_tls:
+    code: GRPC003
+    en: "configure gRPC client TLS: %v"
+    id: "mengonfigurasi TLS gRPC client: %v"
+
+  read_tls_ca_file:
+    code: TLS001
+    en: "read TLS CA file %q: %v"
+    id: "membaca file TLS CA %q: %v"
+
+  load_system_certificate_pool:
+    code: TLS002
+    en: "load system certificate pool: %v"
+    id: "memuat kumpulan sertifikat sistem: %v"
+
+  tls_ca_certificates_required:
+    code: TLS003
+    en: "parse TLS CA file %q: no certificates found"
+    id: "mengurai file TLS CA %q: sertifikat tidak ditemukan"

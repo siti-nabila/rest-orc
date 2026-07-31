@@ -1,0 +1,70 @@
+errors:
+  value_required:
+    code: CFG001
+    en: must not be empty
+    id: tidak boleh kosong
+
+  port_out_of_range:
+    code: CFG002
+    en: must be between 1 and 65535
+    id: harus berada di antara 1 dan 65535
+
+  value_not_positive:
+    code: CFG003
+    en: must be greater than zero
+    id: harus lebih besar dari nol
+
+  absolute_url_required:
+    code: CFG004
+    en: must be an absolute URL
+    id: harus berupa URL absolut
+
+  unsupported_url_scheme:
+    code: CFG005
+    en: scheme must be http or https
+    id: skema harus http atau https
+
+  https_required:
+    code: CFG006
+    en: requires an https base_url
+    id: membutuhkan base_url https
+
+  tls_enabled_for_https:
+    code: CFG007
+    en: must be true for an https base_url
+    id: harus true untuk base_url https
+
+  application_configuration_required:
+    code: APP001
+    en: "create application: configuration must not be nil"
+    id: "membuat aplikasi: konfigurasi tidak boleh nil"
+
+  listen_context_required:
+    code: APP002
+    en: "listen HTTP server: context must not be nil"
+    id: "menjalankan HTTP server: context tidak boleh nil"
+
+  http_round_tripper_required:
+    code: HTTP001
+    en: "create HTTP client: round tripper must not be nil"
+    id: "membuat HTTP client: round tripper tidak boleh nil"
+
+  http_request_context_required:
+    code: HTTP002
+    en: "execute HTTP request: context must not be nil"
+    id: "menjalankan HTTP request: context tidak boleh nil"
+
+  http_request_required:
+    code: HTTP003
+    en: "execute HTTP request: request must not be nil"
+    id: "menjalankan HTTP request: request tidak boleh nil"
+
+  http_request_url_required:
+    code: HTTP004
+    en: "execute HTTP request: request URL must not be nil"
+    id: "menjalankan HTTP request: URL request tidak boleh nil"
+
+  http_response_body_required:
+    code: HTTP005
+    en: "execute HTTP request: response body must not be nil"
+    id: "menjalankan HTTP request: body response tidak boleh nil"

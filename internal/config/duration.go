@@ -1,10 +1,10 @@
 package config
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/goccy/go-yaml"
+	"github.com/siti-nabila/rest-orc/pkg/dictionary"
 )
 
 // Duration decodes human-readable YAML durations while exposing time.Duration
@@ -16,12 +16,12 @@ type Duration struct {
 func (d *Duration) UnmarshalYAML(data []byte) error {
 	var value string
 	if err := yaml.Unmarshal(data, &value); err != nil {
-		return fmt.Errorf("decode duration: %w", err)
+		return dictionary.DecodeDuration(err)
 	}
 
 	parsed, err := time.ParseDuration(value)
 	if err != nil {
-		return fmt.Errorf("parse duration %q: %w", value, err)
+		return dictionary.ParseDuration(value, err)
 	}
 
 	d.Duration = parsed

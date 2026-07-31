@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/siti-nabila/rest-orc/internal/app"
 	"github.com/siti-nabila/rest-orc/internal/config"
+	"github.com/siti-nabila/rest-orc/pkg/dictionary"
 )
 
 const configurationPath = "env.yaml"
@@ -25,7 +25,7 @@ func main() {
 func run() error {
 	cfg, err := config.Load(configurationPath)
 	if err != nil {
-		return fmt.Errorf("load application configuration: %w", err)
+		return dictionary.LoadApplicationConfiguration(err)
 	}
 
 	application, err := app.New(cfg)
