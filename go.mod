@@ -5,6 +5,7 @@ go 1.26.2
 require (
 	github.com/goccy/go-yaml v1.19.2
 	github.com/gofiber/fiber/v3 v3.4.0
+	github.com/siti-nabila/api-contracts v0.0.0-20260731093603-3943927283fe
 	google.golang.org/grpc v1.83.0
 )
 
