@@ -2,11 +2,11 @@ package grpcclient
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/siti-nabila/rest-orc/internal/client/tlsconfig"
 	"github.com/siti-nabila/rest-orc/internal/config"
+	"github.com/siti-nabila/rest-orc/pkg/dictionary"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -41,7 +41,7 @@ func New(cfg config.GRPCClientConfig) (*Client, error) {
 
 	connection, err := grpc.NewClient(cfg.Target, options...)
 	if err != nil {
-		return nil, fmt.Errorf("create gRPC client for target %q: %w", cfg.Target, err)
+		return nil, dictionary.CreateGRPCClient(cfg.Target, err)
 	}
 
 	return &Client{
@@ -60,7 +60,7 @@ func (c *Client) RequestContext(parent context.Context) (context.Context, contex
 
 func (c *Client) Close() error {
 	if err := c.connection.Close(); err != nil {
-		return fmt.Errorf("close gRPC client: %w", err)
+		return dictionary.CloseGRPCClient(err)
 	}
 	return nil
 }
@@ -72,7 +72,7 @@ func newTransportCredentials(cfg config.TLSConfig) (credentials.TransportCredent
 
 	tlsConfig, err := tlsconfig.New(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("configure gRPC client TLS: %w", err)
+		return nil, dictionary.ConfigureGRPCClientTLS(err)
 	}
 	return credentials.NewTLS(tlsConfig), nil
 }

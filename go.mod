@@ -6,6 +6,7 @@ require (
 	github.com/goccy/go-yaml v1.19.2
 	github.com/gofiber/fiber/v3 v3.4.0
 	github.com/siti-nabila/api-contracts v0.0.0-20260731093603-3943927283fe
+	github.com/siti-nabila/error-package v0.0.9
 	google.golang.org/grpc v1.83.0
 )
 
@@ -21,6 +22,7 @@ require (
 	github.com/tinylib/msgp v1.6.4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.72.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect

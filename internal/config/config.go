@@ -1,10 +1,10 @@
 package config
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/goccy/go-yaml"
+	"github.com/siti-nabila/rest-orc/pkg/dictionary"
 )
 
 type Config struct {
@@ -71,17 +71,17 @@ type HTTPKeepaliveConfig struct {
 func Load(path string) (*Config, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("open configuration %q: %w", path, err)
+		return nil, dictionary.OpenConfiguration(path, err)
 	}
 
 	var cfg Config
 	decodeErr := yaml.NewDecoder(file, yaml.Strict()).Decode(&cfg)
 	closeErr := file.Close()
 	if decodeErr != nil {
-		return nil, fmt.Errorf("decode configuration %q: %w", path, decodeErr)
+		return nil, dictionary.DecodeConfiguration(path, decodeErr)
 	}
 	if closeErr != nil {
-		return nil, fmt.Errorf("close configuration %q: %w", path, closeErr)
+		return nil, dictionary.CloseConfiguration(path, closeErr)
 	}
 
 	if err := applyEnvironment(&cfg, os.LookupEnv); err != nil {
