@@ -39,7 +39,8 @@ func (cfg *Config) Validate() error {
 	if err := cfg.Clients.AuthGRPC.validate("clients.auth_grpc"); err != nil {
 		return err
 	}
-	return cfg.Clients.BackendHTTP.validate("clients.backend_http")
+	// return cfg.Clients.BackendHTTP.validate("clients.backend_http")
+	return nil
 }
 
 func (cfg GRPCClientConfig) validate(fieldPrefix string) error {

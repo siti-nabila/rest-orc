@@ -27,8 +27,8 @@ type ServerConfig struct {
 }
 
 type ClientsConfig struct {
-	AuthGRPC    GRPCClientConfig `yaml:"auth_grpc"`
-	BackendHTTP HTTPClientConfig `yaml:"backend_http"`
+	AuthGRPC GRPCClientConfig `yaml:"auth_grpc"`
+	// BackendHTTP HTTPClientConfig `yaml:"backend_http"`
 }
 
 type GRPCClientConfig struct {

@@ -12,10 +12,13 @@ import (
 	authdictionary "github.com/siti-nabila/api-contracts/pkg/dictionary/auth"
 	commondictionary "github.com/siti-nabila/api-contracts/pkg/dictionary/common"
 	"github.com/siti-nabila/api-contracts/pkg/grpcerror"
+	grpcmapping "github.com/siti-nabila/api-contracts/pkg/grpcerror/mapping"
 	"github.com/siti-nabila/api-contracts/pkg/locale"
+	errorpackage "github.com/siti-nabila/error-package"
 	appresponse "github.com/siti-nabila/rest-orc/internal/response"
 	"github.com/siti-nabila/rest-orc/tests/response/fixtures"
 	"github.com/siti-nabila/rest-orc/tests/shared/testutils"
+	"google.golang.org/grpc/codes"
 )
 
 func All() []testutils.Scenario {
@@ -29,8 +32,36 @@ func All() []testutils.Scenario {
 			Run:  mapRegisteredGRPCError,
 		},
 		{
+			Name: "maps registered grpc error using arbitrary request language",
+			Run:  mapArbitraryLanguageGRPCError,
+		},
+		{
+			Name: "maps registered error by HTTP contract independently of grpc code",
+			Run:  mapRegisteredErrorIndependentlyOfGRPCCode,
+		},
+		{
+			Name: "maps common deadline exceeded to HTTP gateway timeout",
+			Run:  mapCommonDeadlineExceeded,
+		},
+		{
+			Name: "maps missing HTTP endpoint separately from missing data",
+			Run:  mapMissingHTTPEndpoint,
+		},
+		{
 			Name: "maps grpc bad request field details",
 			Run:  mapBadRequest,
+		},
+		{
+			Name: "preserves multiple localized grpc field errors",
+			Run:  mapArbitraryLanguageFieldErrors,
+		},
+		{
+			Name: "maps error-package errors to HTTP bad request",
+			Run:  mapErrorPackageErrors,
+		},
+		{
+			Name: "maps encoded unknown grpc error to HTTP internal error",
+			Run:  mapEncodedUnknownError,
 		},
 		{
 			Name: "hides unknown error as internal response",
@@ -60,7 +91,7 @@ func mapRegisteredGRPCError(t *testing.T) {
 	app := fiber.New()
 	app.Get("/profile", func(ctx fiber.Ctx) error {
 		return writer.Write(ctx, appresponse.Result{
-			Err: grpcerror.Encode(authdictionary.ErrNotFound, locale.English),
+			Err: newErrorEncoder().Encode(authdictionary.ErrNotFound, locale.English),
 		})
 	})
 
@@ -73,6 +104,84 @@ func mapRegisteredGRPCError(t *testing.T) {
 	)
 }
 
+func mapArbitraryLanguageGRPCError(t *testing.T) {
+	writer := newWriter()
+	app := fiber.New()
+	app.Get("/profile", func(ctx fiber.Ctx) error {
+		return writer.Write(ctx, appresponse.Result{
+			Err: newErrorEncoder().Encode(authdictionary.ErrDataExists, locale.Chinese),
+		})
+	})
+
+	response := performRequest(t, app, "/profile", "zh-CN")
+	assertResponse(
+		t,
+		response,
+		http.StatusConflict,
+		fixtures.AlreadyExistsChineseBody,
+	)
+}
+
+func mapCommonDeadlineExceeded(t *testing.T) {
+	writer := newWriter()
+	app := fiber.New()
+	app.Get("/profile", func(ctx fiber.Ctx) error {
+		return writer.Write(ctx, appresponse.Result{
+			Err: newErrorEncoder().Encode(
+				commondictionary.ErrDeadlineExceeded,
+				locale.English,
+			),
+		})
+	})
+
+	response := performRequest(t, app, "/profile", "en")
+	assertResponse(
+		t,
+		response,
+		http.StatusGatewayTimeout,
+		fixtures.DeadlineExceededBody,
+	)
+}
+
+func mapRegisteredErrorIndependentlyOfGRPCCode(t *testing.T) {
+	writer := newWriter()
+	encoder := grpcerror.NewEncoder(grpcerror.CodeMapping{
+		Code:   codes.PermissionDenied,
+		Errors: []error{authdictionary.ErrDataExists},
+	})
+	app := fiber.New()
+	app.Get("/profile", func(ctx fiber.Ctx) error {
+		return writer.Write(ctx, appresponse.Result{
+			Err: encoder.Encode(authdictionary.ErrDataExists, locale.English),
+		})
+	})
+
+	response := performRequest(t, app, "/profile", "en")
+	assertResponse(
+		t,
+		response,
+		http.StatusConflict,
+		fixtures.AlreadyExistsEnglishBody,
+	)
+}
+
+func mapMissingHTTPEndpoint(t *testing.T) {
+	writer := newWriter()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: func(ctx fiber.Ctx, err error) error {
+			return writer.Write(ctx, appresponse.Result{Err: err})
+		},
+	})
+
+	response := performRequest(t, app, "/missing-endpoint", "id-ID")
+	assertResponse(
+		t,
+		response,
+		http.StatusNotFound,
+		fixtures.EndpointNotFoundBody,
+	)
+}
+
 func mapBadRequest(t *testing.T) {
 	writer := newWriter()
 	fieldErrors := dictionary.FieldErrors{}
@@ -81,7 +190,7 @@ func mapBadRequest(t *testing.T) {
 	app := fiber.New()
 	app.Get("/profile", func(ctx fiber.Ctx) error {
 		return writer.Write(ctx, appresponse.Result{
-			Err: grpcerror.Encode(fieldErrors, locale.Indonesian),
+			Err: newErrorEncoder().Encode(fieldErrors, locale.Indonesian),
 		})
 	})
 
@@ -91,6 +200,70 @@ func mapBadRequest(t *testing.T) {
 		response,
 		http.StatusBadRequest,
 		fixtures.BadRequestIndonesianBody,
+	)
+}
+
+func mapArbitraryLanguageFieldErrors(t *testing.T) {
+	writer := newWriter()
+	fieldErrors := dictionary.FieldErrors{}
+	fieldErrors.Add("email", authdictionary.ErrRequired)
+	fieldErrors.Add("email", authdictionary.ErrMinLength(6))
+
+	app := fiber.New()
+	app.Get("/profile", func(ctx fiber.Ctx) error {
+		return writer.Write(ctx, appresponse.Result{
+			Err: newErrorEncoder().Encode(fieldErrors, locale.Language("zh-CN")),
+		})
+	})
+
+	response := performRequest(t, app, "/profile", "zh-CN")
+	assertResponse(
+		t,
+		response,
+		http.StatusBadRequest,
+		fixtures.BadRequestChineseBody,
+	)
+}
+
+func mapErrorPackageErrors(t *testing.T) {
+	writer := newWriter()
+	fieldErrors := errorpackage.NewErrors()
+	fieldErrors.Add("email", authdictionary.ErrRequired)
+
+	app := fiber.New()
+	app.Get("/profile", func(ctx fiber.Ctx) error {
+		return writer.Write(ctx, appresponse.Result{
+			Err: newErrorEncoder().Encode(fieldErrors, locale.Indonesian),
+		})
+	})
+
+	response := performRequest(t, app, "/profile", "id")
+	assertResponse(
+		t,
+		response,
+		http.StatusBadRequest,
+		fixtures.BadRequestIndonesianBody,
+	)
+}
+
+func mapEncodedUnknownError(t *testing.T) {
+	writer := newWriter()
+	app := fiber.New()
+	app.Get("/profile", func(ctx fiber.Ctx) error {
+		return writer.Write(ctx, appresponse.Result{
+			Err: newErrorEncoder().Encode(
+				errors.New("database password leaked"),
+				locale.English,
+			),
+		})
+	})
+
+	response := performRequest(t, app, "/profile", "en")
+	assertResponse(
+		t,
+		response,
+		http.StatusInternalServerError,
+		fixtures.InternalErrorBody,
 	)
 }
 
@@ -117,6 +290,14 @@ func newWriter() *appresponse.Writer {
 		authdictionary.Registry(),
 		commondictionary.Registry(),
 	))
+}
+
+func newErrorEncoder() *grpcerror.Encoder {
+	mappings := append(
+		grpcmapping.CommonCodeMappings(),
+		grpcmapping.AuthCodeMappings()...,
+	)
+	return grpcerror.NewEncoder(mappings...)
 }
 
 func performRequest(

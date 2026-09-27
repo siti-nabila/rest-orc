@@ -36,8 +36,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/shamaton/msgpack/v3 v3.1.2 h1:d5gWAIyMU4M0WgDjz6IFSCuXJUA2dFwRHBpDclE8CLw=
 github.com/shamaton/msgpack/v3 v3.1.2/go.mod h1:DcQG8jrdrQCIxr3HlMYkiXdMhK+KfN2CitkyzsQV4uc=
-github.com/siti-nabila/api-contracts v0.0.0-20260731093603-3943927283fe h1:8/aGvc7FyF3737f3ip4+JQk9Gfgf/a0azx8hwgiPHnw=
-github.com/siti-nabila/api-contracts v0.0.0-20260731093603-3943927283fe/go.mod h1:qPBwa2pRqqstc3gRCvaZemIouTSFiSFwyVbGyEb4Wfw=
+github.com/siti-nabila/api-contracts v0.0.0-20260803064555-df4684bcd60d h1:P/j/dykqdJDw7H1/9683q8/rg8DkX95tKz1ghPtKx+s=
+github.com/siti-nabila/api-contracts v0.0.0-20260803064555-df4684bcd60d/go.mod h1:qPBwa2pRqqstc3gRCvaZemIouTSFiSFwyVbGyEb4Wfw=
 github.com/siti-nabila/error-package v0.0.9 h1:NR4+dy/egafTaZ+R+bOebOU1qb8TrCYPYQ/hM3rqB3Y=
 github.com/siti-nabila/error-package v0.0.9/go.mod h1:424IwZoGrk0jDWOUJi9t17dCykYk5Wes5N0zjnl+OBk=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=

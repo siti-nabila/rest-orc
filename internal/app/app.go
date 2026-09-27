@@ -7,7 +7,6 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/siti-nabila/rest-orc/internal/client/grpcclient"
-	"github.com/siti-nabila/rest-orc/internal/client/httpclient"
 	"github.com/siti-nabila/rest-orc/internal/config"
 	"github.com/siti-nabila/rest-orc/pkg/dictionary"
 )
@@ -15,7 +14,7 @@ import (
 type App struct {
 	HTTPServer     *fiber.App
 	AuthConnection *grpcclient.Client
-	BackendClient  *httpclient.Client
+	// BackendClient  *httpclient.Client
 
 	listenAddress   string
 	shutdownTimeout config.Duration
@@ -34,8 +33,18 @@ func New(cfg *config.Config) (*App, error) {
 		return nil, dictionary.CreateApplication(err)
 	}
 
-	backendClient, err := httpclient.New(cfg.Clients.BackendHTTP)
+	// backendClient, err := httpclient.New(cfg.Clients.BackendHTTP)
+	// if err != nil {
+	// 	closeErr := authConnection.Close()
+	// 	return nil, errors.Join(
+	// 		dictionary.CreateApplication(err),
+	// 		closeErr,
+	// 	)
+	// }
+
+	httpServer, err := newHTTPServer(cfg, authConnection)
 	if err != nil {
+		// backendClient.Close()
 		closeErr := authConnection.Close()
 		return nil, errors.Join(
 			dictionary.CreateApplication(err),
@@ -44,9 +53,9 @@ func New(cfg *config.Config) (*App, error) {
 	}
 
 	return &App{
-		HTTPServer:      newHTTPServer(cfg),
-		AuthConnection:  authConnection,
-		BackendClient:   backendClient,
+		HTTPServer:     httpServer,
+		AuthConnection: authConnection,
+		// BackendClient:   backendClient,
 		listenAddress:   ":" + strconv.Itoa(cfg.App.Port),
 		shutdownTimeout: cfg.Server.ShutdownTimeout,
 	}, nil
@@ -79,7 +88,7 @@ func (application *App) Close() error {
 		closeErrors = append(closeErrors, dictionary.ShutdownHTTPServer(err))
 	}
 
-	application.BackendClient.Close()
+	// application.BackendClient.Close()
 	if err := application.AuthConnection.Close(); err != nil {
 		closeErrors = append(closeErrors, dictionary.CloseAuthGRPCConnection(err))
 	}
