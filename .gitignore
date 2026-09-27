@@ -34,3 +34,5 @@ go.work.sum
 AGENTS.md
 env.yaml
 Makefile
+.DS_Store
+bin/

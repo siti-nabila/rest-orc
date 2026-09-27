@@ -15,9 +15,9 @@ func applyEnvironment(cfg *Config, lookup lookupEnvironment) error {
 	stringOverride(lookup, "AUTH_GRPC_TARGET", &cfg.Clients.AuthGRPC.Target)
 	stringOverride(lookup, "AUTH_GRPC_TLS_SERVER_NAME", &cfg.Clients.AuthGRPC.TLS.ServerName)
 	stringOverride(lookup, "AUTH_GRPC_TLS_CA_FILE", &cfg.Clients.AuthGRPC.TLS.CAFile)
-	stringOverride(lookup, "BACKEND_HTTP_BASE_URL", &cfg.Clients.BackendHTTP.BaseURL)
-	stringOverride(lookup, "BACKEND_HTTP_TLS_SERVER_NAME", &cfg.Clients.BackendHTTP.TLS.ServerName)
-	stringOverride(lookup, "BACKEND_HTTP_TLS_CA_FILE", &cfg.Clients.BackendHTTP.TLS.CAFile)
+	// stringOverride(lookup, "BACKEND_HTTP_BASE_URL", &cfg.Clients.BackendHTTP.BaseURL)
+	// stringOverride(lookup, "BACKEND_HTTP_TLS_SERVER_NAME", &cfg.Clients.BackendHTTP.TLS.ServerName)
+	// stringOverride(lookup, "BACKEND_HTTP_TLS_CA_FILE", &cfg.Clients.BackendHTTP.TLS.CAFile)
 
 	intOverrides := []struct {
 		key    string
@@ -26,9 +26,9 @@ func applyEnvironment(cfg *Config, lookup lookupEnvironment) error {
 		{"APP_PORT", &cfg.App.Port},
 		{"AUTH_GRPC_MAX_RECEIVE_MESSAGE_BYTES", &cfg.Clients.AuthGRPC.MaxReceiveMessageBytes},
 		{"AUTH_GRPC_MAX_SEND_MESSAGE_BYTES", &cfg.Clients.AuthGRPC.MaxSendMessageBytes},
-		{"BACKEND_HTTP_MAX_IDLE_CONNECTIONS", &cfg.Clients.BackendHTTP.Keepalive.MaxIdleConnections},
-		{"BACKEND_HTTP_MAX_IDLE_CONNECTIONS_PER_HOST", &cfg.Clients.BackendHTTP.Keepalive.MaxIdleConnectionsPerHost},
-		{"BACKEND_HTTP_MAX_CONNECTIONS_PER_HOST", &cfg.Clients.BackendHTTP.Keepalive.MaxConnectionsPerHost},
+		// {"BACKEND_HTTP_MAX_IDLE_CONNECTIONS", &cfg.Clients.BackendHTTP.Keepalive.MaxIdleConnections},
+		// {"BACKEND_HTTP_MAX_IDLE_CONNECTIONS_PER_HOST", &cfg.Clients.BackendHTTP.Keepalive.MaxIdleConnectionsPerHost},
+		// {"BACKEND_HTTP_MAX_CONNECTIONS_PER_HOST", &cfg.Clients.BackendHTTP.Keepalive.MaxConnectionsPerHost},
 	}
 	for _, override := range intOverrides {
 		if err := intOverride(lookup, override.key, override.target); err != nil {
@@ -42,8 +42,8 @@ func applyEnvironment(cfg *Config, lookup lookupEnvironment) error {
 	}{
 		{"AUTH_GRPC_TLS_ENABLED", &cfg.Clients.AuthGRPC.TLS.Enabled},
 		{"AUTH_GRPC_KEEPALIVE_ENABLED", &cfg.Clients.AuthGRPC.Keepalive.Enabled},
-		{"BACKEND_HTTP_TLS_ENABLED", &cfg.Clients.BackendHTTP.TLS.Enabled},
-		{"BACKEND_HTTP_KEEPALIVE_ENABLED", &cfg.Clients.BackendHTTP.Keepalive.Enabled},
+		// {"BACKEND_HTTP_TLS_ENABLED", &cfg.Clients.BackendHTTP.TLS.Enabled},
+		// {"BACKEND_HTTP_KEEPALIVE_ENABLED", &cfg.Clients.BackendHTTP.Keepalive.Enabled},
 	}
 	for _, override := range boolOverrides {
 		if err := boolOverride(lookup, override.key, override.target); err != nil {
@@ -62,9 +62,9 @@ func applyEnvironment(cfg *Config, lookup lookupEnvironment) error {
 		{"AUTH_GRPC_REQUEST_TIMEOUT", &cfg.Clients.AuthGRPC.RequestTimeout},
 		{"AUTH_GRPC_KEEPALIVE_TIME", &cfg.Clients.AuthGRPC.Keepalive.Time},
 		{"AUTH_GRPC_KEEPALIVE_TIMEOUT", &cfg.Clients.AuthGRPC.Keepalive.Timeout},
-		{"BACKEND_HTTP_REQUEST_TIMEOUT", &cfg.Clients.BackendHTTP.RequestTimeout},
-		{"BACKEND_HTTP_IDLE_CONNECTION_TIMEOUT", &cfg.Clients.BackendHTTP.Keepalive.IdleConnectionTimeout},
-		{"BACKEND_HTTP_RESPONSE_HEADER_TIMEOUT", &cfg.Clients.BackendHTTP.Keepalive.ResponseHeaderTimeout},
+		// {"BACKEND_HTTP_REQUEST_TIMEOUT", &cfg.Clients.BackendHTTP.RequestTimeout},
+		// {"BACKEND_HTTP_IDLE_CONNECTION_TIMEOUT", &cfg.Clients.BackendHTTP.Keepalive.IdleConnectionTimeout},
+		// {"BACKEND_HTTP_RESPONSE_HEADER_TIMEOUT", &cfg.Clients.BackendHTTP.Keepalive.ResponseHeaderTimeout},
 	}
 	for _, override := range durationOverrides {
 		if err := durationOverride(lookup, override.key, override.target); err != nil {

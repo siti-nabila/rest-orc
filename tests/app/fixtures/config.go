@@ -30,28 +30,20 @@ func ValidConfig() *config.Config {
 					Timeout: duration(20 * time.Second),
 				},
 			},
-			BackendHTTP: config.HTTPClientConfig{
-				BaseURL:        "http://backend-proxy:8080",
-				RequestTimeout: duration(10 * time.Second),
-				Keepalive: config.HTTPKeepaliveConfig{
-					Enabled:                   true,
-					MaxIdleConnections:        100,
-					MaxIdleConnectionsPerHost: 20,
-					MaxConnectionsPerHost:     100,
-					IdleConnectionTimeout:     duration(90 * time.Second),
-					ResponseHeaderTimeout:     duration(10 * time.Second),
-				},
-			},
+			// BackendHTTP: config.HTTPClientConfig{
+			// 	BaseURL:        "http://backend-proxy:8080",
+			// 	RequestTimeout: duration(10 * time.Second),
+			// 	Keepalive: config.HTTPKeepaliveConfig{
+			// 		Enabled:                   true,
+			// 		MaxIdleConnections:        100,
+			// 		MaxIdleConnectionsPerHost: 20,
+			// 		MaxConnectionsPerHost:     100,
+			// 		IdleConnectionTimeout:     duration(90 * time.Second),
+			// 		ResponseHeaderTimeout:     duration(10 * time.Second),
+			// 	},
+			// },
 		},
 	}
-}
-
-func ConfigWithUnreadableBackendCA() *config.Config {
-	cfg := ValidConfig()
-	cfg.Clients.BackendHTTP.TLS.Enabled = true
-	cfg.Clients.BackendHTTP.BaseURL = "https://backend-proxy:8443"
-	cfg.Clients.BackendHTTP.TLS.CAFile = "/path/that/does/not/exist/ca.pem"
-	return cfg
 }
 
 func duration(value time.Duration) config.Duration {

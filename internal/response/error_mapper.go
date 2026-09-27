@@ -110,7 +110,7 @@ func (mapper *ErrorMapper) mapFiberError(
 	case fiber.StatusForbidden:
 		return mappedDefinition(common.ErrForbidden, language)
 	case fiber.StatusNotFound:
-		return mappedDefinition(common.ErrNotFound, language)
+		return mappedDefinition(common.ErrEndpointNotFound, language)
 	default:
 		return internalError(language)
 	}

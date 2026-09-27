@@ -68,3 +68,105 @@ errors:
     code: HTTP005
     en: "execute HTTP request: response body must not be nil"
     id: "menjalankan HTTP request: body response tidak boleh nil"
+
+  grpc_auth_transport_required:
+    code: GRPC004
+    en: "create auth gRPC client: transport must not be nil"
+    id: "membuat client gRPC auth: transport tidak boleh nil"
+
+  grpc_auth_service_required:
+    code: GRPC005
+    en: "create auth gRPC client: service must not be nil"
+    id: "membuat client gRPC auth: service tidak boleh nil"
+
+  grpc_auth_request_context_required:
+    code: GRPC006
+    en: "execute auth gRPC request: context must not be nil"
+    id: "menjalankan request gRPC auth: context tidak boleh nil"
+
+  grpc_auth_list_users_request_required:
+    code: GRPC007
+    en: "execute auth ListUsers request: request must not be nil"
+    id: "menjalankan request ListUsers auth: request tidak boleh nil"
+
+  grpc_auth_me_response_required:
+    code: GRPC008
+    en: "execute auth Me request: response must not be nil"
+    id: "menjalankan request Me auth: response tidak boleh nil"
+
+  grpc_auth_list_users_response_required:
+    code: GRPC009
+    en: "execute auth ListUsers request: response must not be nil"
+    id: "menjalankan request ListUsers auth: response tidak boleh nil"
+
+  grpc_auth_register_request_required:
+    code: GRPC010
+    en: "execute auth Register request: request must not be nil"
+    id: "menjalankan request Register auth: request tidak boleh nil"
+
+  grpc_auth_register_response_required:
+    code: GRPC011
+    en: "execute auth Register request: response must not be nil"
+    id: "menjalankan request Register auth: response tidak boleh nil"
+
+  grpc_auth_login_request_required:
+    code: GRPC012
+    en: "execute auth Login request: request must not be nil"
+    id: "menjalankan request Login auth: request tidak boleh nil"
+
+
+  grpc_auth_login_response_required:
+    code: GRPC013
+    en: "execute auth Login response: response must not be nil"
+    id: "menjalankan response Login auth: response tidak boleh nil"
+
+
+  users_repository_client_required:
+    code: REP001
+    en: "create users repository: client must not be nil"
+    id: "membuat repository users: client tidak boleh nil"
+
+  users_repository_context_required:
+    code: REP002
+    en: "list users: context must not be nil"
+    id: "mengambil daftar users: context tidak boleh nil"
+
+  users_repository_list_item_required:
+    code: REP003
+    en: "list users: response item must not be nil"
+    id: "mengambil daftar users: item response tidak boleh nil"
+
+  authenticator_client_required:
+    code: AUTH001
+    en: "create authenticator: client must not be nil"
+    id: "membuat authenticator: client tidak boleh nil"
+
+  authenticator_context_required:
+    code: AUTH002
+    en: "authenticate request: context must not be nil"
+    id: "mengautentikasi request: context tidak boleh nil"
+
+  authentication_middleware_required:
+    code: MW001
+    en: "create authentication middleware: authenticator must not be nil"
+    id: "membuat middleware autentikasi: authenticator tidak boleh nil"
+
+  users_usecase_repository_required:
+    code: USE001
+    en: "create users list use case: repository must not be nil"
+    id: "membuat use case daftar users: repository tidak boleh nil"
+
+  users_usecase_context_required:
+    code: USE002
+    en: "execute users list use case: context must not be nil"
+    id: "menjalankan use case daftar users: context tidak boleh nil"
+
+  users_handler_usecase_required:
+    code: HDL001
+    en: "create users HTTP handler: use case must not be nil"
+    id: "membuat handler HTTP users: use case tidak boleh nil"
+
+  users_handler_response_writer_required:
+    code: HDL002
+    en: "create users HTTP handler: response writer must not be nil"
+    id: "membuat handler HTTP users: response writer tidak boleh nil"

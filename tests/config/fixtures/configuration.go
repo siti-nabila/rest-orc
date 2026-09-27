@@ -30,20 +30,6 @@ clients:
       enabled: false
       time: 5m
       timeout: 20s
-  backend_http:
-    base_url: http://backend-proxy:8080
-    request_timeout: 10s
-    tls:
-      enabled: false
-      server_name: ""
-      ca_file: ""
-    keepalive:
-      enabled: true
-      max_idle_connections: 100
-      max_idle_connections_per_host: 20
-      max_connections_per_host: 100
-      idle_connection_timeout: 90s
-      response_header_timeout: 10s
 `
 
 func WithUnknownField() string {

@@ -5,9 +5,10 @@ go 1.26.2
 require (
 	github.com/goccy/go-yaml v1.19.2
 	github.com/gofiber/fiber/v3 v3.4.0
-	github.com/siti-nabila/api-contracts v0.0.0-20260731093603-3943927283fe
+	github.com/siti-nabila/api-contracts v0.0.0-20260803064555-df4684bcd60d
 	github.com/siti-nabila/error-package v0.0.9
 	google.golang.org/grpc v1.83.0
+	google.golang.org/protobuf v1.36.11
 )
 
 require (
@@ -28,5 +29,4 @@ require (
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
 )
