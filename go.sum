@@ -36,10 +36,10 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/shamaton/msgpack/v3 v3.1.2 h1:d5gWAIyMU4M0WgDjz6IFSCuXJUA2dFwRHBpDclE8CLw=
 github.com/shamaton/msgpack/v3 v3.1.2/go.mod h1:DcQG8jrdrQCIxr3HlMYkiXdMhK+KfN2CitkyzsQV4uc=
-github.com/siti-nabila/api-contracts v0.0.0-20260803064555-df4684bcd60d h1:P/j/dykqdJDw7H1/9683q8/rg8DkX95tKz1ghPtKx+s=
-github.com/siti-nabila/api-contracts v0.0.0-20260803064555-df4684bcd60d/go.mod h1:qPBwa2pRqqstc3gRCvaZemIouTSFiSFwyVbGyEb4Wfw=
-github.com/siti-nabila/error-package v0.0.9 h1:NR4+dy/egafTaZ+R+bOebOU1qb8TrCYPYQ/hM3rqB3Y=
-github.com/siti-nabila/error-package v0.0.9/go.mod h1:424IwZoGrk0jDWOUJi9t17dCykYk5Wes5N0zjnl+OBk=
+github.com/siti-nabila/api-contracts v0.0.0-20261023084653-d32fd5c1bab4 h1:yVBL38fM3qzd27qF1GivjK3Xla6FxtxXjCDlVvp4Mnc=
+github.com/siti-nabila/api-contracts v0.0.0-20261023084653-d32fd5c1bab4/go.mod h1:Jb5bNxnX/aW6YWghT/pXorXlmIDRRxXltY8gL7Udzg4=
+github.com/siti-nabila/error-package v0.0.10-0.20260927130242-e06b69ef855d h1:woIeRxbNHQH9+8XKrTrjDeQVjZwllwW0N0Z6hjmb3pM=
+github.com/siti-nabila/error-package v0.0.10-0.20260927130242-e06b69ef855d/go.mod h1:424IwZoGrk0jDWOUJi9t17dCykYk5Wes5N0zjnl+OBk=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/tinylib/msgp v1.6.4 h1:mOwYbyYDLPj35mkA2BjjYejgJk9BuHxDdvRnb6v2ZcQ=

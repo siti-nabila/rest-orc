@@ -3,7 +3,8 @@ package app
 import (
 	"github.com/gofiber/fiber/v3"
 	requestauth "github.com/siti-nabila/rest-orc/internal/auth"
-	"github.com/siti-nabila/rest-orc/internal/client/grpcauth"
+	"github.com/siti-nabila/rest-orc/internal/client/authservice"
+	authhandler "github.com/siti-nabila/rest-orc/internal/features/auth/handler"
 	"github.com/siti-nabila/rest-orc/internal/middleware/authorization"
 	"github.com/siti-nabila/rest-orc/internal/response"
 )
@@ -14,8 +15,9 @@ type routeGroups struct {
 }
 
 type routeDependencies struct {
-	authClient     *grpcauth.Client
+	authClient     *authservice.Client
 	responseWriter *response.Writer
+	browser        *authhandler.BrowserPolicy
 }
 
 func newRouteGroups(
@@ -40,17 +42,24 @@ func (routes routeGroups) public(prefix string) fiber.Router {
 	return routes.router.Group(prefix)
 }
 
+func (routes routeGroups) authenticated(prefix string) fiber.Router {
+	return routes.router.Group(prefix, routes.authentication)
+}
+
 func registerFeatureRoutes(
 	routes routeGroups,
 	dependencies routeDependencies,
 ) error {
-	if err := registerUsersRoutes(
+	meRoutes := routes.authenticated(authhandler.MeRoute)
+	if err := registerAuthRoutes(
 		routes,
+		meRoutes,
 		dependencies.authClient,
 		dependencies.responseWriter,
+		dependencies.browser,
 	); err != nil {
 		return err
 	}
 
-	return nil
+	return registerUsersRoutes(routes, meRoutes, dependencies.authClient, dependencies.responseWriter)
 }

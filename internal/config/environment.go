@@ -2,6 +2,7 @@ package config
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/siti-nabila/rest-orc/pkg/dictionary"
@@ -10,9 +11,14 @@ import (
 type lookupEnvironment func(string) (string, bool)
 
 func applyEnvironment(cfg *Config, lookup lookupEnvironment) error {
+	if value, ok := lookup("AUTH_BROWSER_ALLOWED_ORIGINS"); ok {
+		cfg.Browser.AllowedOrigins = strings.Split(value, ",")
+	}
+	stringOverride(lookup, "AUTH_BROWSER_CSRF_SECRET", &cfg.Browser.CSRFSecret)
 	stringOverride(lookup, "APP_NAME", &cfg.App.Name)
 	stringOverride(lookup, "APP_ENV", &cfg.App.Env)
 	stringOverride(lookup, "AUTH_GRPC_TARGET", &cfg.Clients.AuthGRPC.Target)
+	stringOverride(lookup, "AUTH_GRPC_SERVICE_TOKEN", &cfg.Clients.AuthGRPC.ServiceToken)
 	stringOverride(lookup, "AUTH_GRPC_TLS_SERVER_NAME", &cfg.Clients.AuthGRPC.TLS.ServerName)
 	stringOverride(lookup, "AUTH_GRPC_TLS_CA_FILE", &cfg.Clients.AuthGRPC.TLS.CAFile)
 	// stringOverride(lookup, "BACKEND_HTTP_BASE_URL", &cfg.Clients.BackendHTTP.BaseURL)

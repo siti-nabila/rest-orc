@@ -1,47 +1,46 @@
 package app
 
 import (
-	"github.com/siti-nabila/rest-orc/internal/client/grpcauth"
-	usershttp "github.com/siti-nabila/rest-orc/internal/features/users/handler/http"
-	usersrepo "github.com/siti-nabila/rest-orc/internal/features/users/repo/grpcauth"
+	"github.com/gofiber/fiber/v3"
+	"github.com/siti-nabila/rest-orc/internal/client/authservice"
+	usersgateway "github.com/siti-nabila/rest-orc/internal/features/users/gateway/authservice"
+	usershandler "github.com/siti-nabila/rest-orc/internal/features/users/handler"
 	usersusecase "github.com/siti-nabila/rest-orc/internal/features/users/usecase"
 	"github.com/siti-nabila/rest-orc/internal/response"
 )
 
 func registerUsersRoutes(
 	routes routeGroups,
-	authClient *grpcauth.Client,
+	meRoutes fiber.Router,
+	authClient *authservice.Client,
 	responseWriter *response.Writer,
 ) error {
-	repository, err := usersrepo.New(authClient)
+	gateway, err := usersgateway.New(authClient)
 	if err != nil {
 		return err
 	}
-	listUsers, err := usersusecase.NewList(repository)
+	listUsers, err := usersusecase.NewList(gateway)
 	if err != nil {
 		return err
 	}
-	register, err := usersusecase.NewRegister(repository)
+	profileGateway, err := usersgateway.NewProfile(authClient)
 	if err != nil {
 		return err
 	}
-	login, err := usersusecase.NewLogin(repository)
+	updateProfile, err := usersusecase.NewUpdateProfile(profileGateway)
 	if err != nil {
 		return err
 	}
-	handler, err := usershttp.New(
+	handler, err := usershandler.New(
 		listUsers,
-		register,
-		login,
+		updateProfile,
 		responseWriter,
 	)
 	if err != nil {
 		return err
 	}
 
-	// Register public endpoints before the admin middleware group with the same
-	// prefix, otherwise Fiber would run the admin middleware first.
-	handler.RegisterPublicRoutes(routes.public(usershttp.Route))
-	handler.RegisterAdminRoutes(routes.admin(usershttp.Route))
+	handler.RegisterAuthenticatedRoutes(meRoutes)
+	handler.RegisterAdminRoutes(routes.admin(usershandler.Route))
 	return nil
 }

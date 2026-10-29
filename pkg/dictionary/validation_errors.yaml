@@ -1,0 +1,33 @@
+errors:
+  password_must_differ:
+    en: must differ from the current password
+    id: harus berbeda dari password saat ini
+    zh: 必须与当前密码不同
+  invalid_password_characters:
+    en: contains invalid characters
+    id: mengandung karakter tidak valid
+    zh: 包含无效字符
+  invalid_profile_characters:
+    en: contains invalid characters
+    id: mengandung karakter tidak valid
+    zh: 包含无效字符
+  invalid_country_code:
+    en: must be a calling code of 1 to 3 digits with no leading zero
+    id: harus berupa kode telepon 1 sampai 3 digit tanpa awalan nol
+    zh: 必须为一至三位且不以零开头的电话区号
+  invalid_phone:
+    en: must contain only ASCII digits
+    id: hanya boleh berisi digit ASCII
+    zh: 只能包含 ASCII 数字
+  invalid_session_id:
+    en: must be a canonical lowercase UUID
+    id: harus berupa UUID huruf kecil dengan format kanonis
+    zh: 必须为规范的小写 UUID
+  invalid_session_pagination:
+    en: invalid session pagination value
+    id: nilai pagination sesi tidak valid
+    zh: 会话分页值无效
+  unsupported_session_control:
+    en: this session list control is not supported
+    id: kontrol daftar sesi ini tidak didukung
+    zh: 不支持此会话列表参数

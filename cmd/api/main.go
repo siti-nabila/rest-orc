@@ -13,8 +13,6 @@ import (
 	"github.com/siti-nabila/rest-orc/pkg/dictionary"
 )
 
-const configurationPath = "env.yaml"
-
 func main() {
 	if err := run(); err != nil {
 		log.Printf("application stopped with error: %v", err)
@@ -23,7 +21,7 @@ func main() {
 }
 
 func run() error {
-	cfg, err := config.Load(configurationPath)
+	cfg, err := config.Load()
 	if err != nil {
 		return dictionary.LoadApplicationConfiguration(err)
 	}

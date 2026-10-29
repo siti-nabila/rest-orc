@@ -1,4 +1,59 @@
 errors:
+  invalid_browser_origins:
+    code: CFG010
+    en: must contain exact HTTPS origins without paths or wildcards
+    id: harus berisi origin HTTPS persis tanpa path atau wildcard
+    zh: 必须包含无路径或通配符的精确 HTTPS 来源
+  invalid_csrf_secret:
+    code: CFG011
+    en: must be a separate canonical unpadded base64url secret of 32 bytes
+    id: harus berupa secret base64url kanonis terpisah tanpa padding sepanjang 32 byte
+    zh: 必须是独立的32字节无填充规范base64url密钥
+  session_dependency_required:
+    code: SES001
+    en: session dependency must not be nil
+    id: dependency sesi tidak boleh nil
+  session_request_required:
+    code: SES002
+    en: session request must contain exactly one credential
+    id: request sesi harus berisi tepat satu credential
+  session_result_invalid:
+    code: SES003
+    en: session dependency returned an invalid result
+    id: dependency sesi mengembalikan hasil tidak valid
+  browser_policy_required:
+    code: SES004
+    en: browser policy must not be nil
+    id: policy browser tidak boleh nil
+  csrf_generation_failed:
+    code: SES005
+    en: could not prepare browser proof
+    id: tidak dapat menyiapkan bukti browser
+  grpc_password_service_required:
+    code: GRPC017
+    en: "create auth gRPC client: password service must not be nil"
+    id: "membuat client gRPC auth: password service tidak boleh nil"
+
+  grpc_change_password_request_required:
+    code: GRPC018
+    en: "execute ChangePassword request: request must not be nil"
+    id: "menjalankan request ChangePassword: request tidak boleh nil"
+
+  grpc_change_password_response_required:
+    code: GRPC019
+    en: "execute ChangePassword request: response must not be nil"
+    id: "menjalankan request ChangePassword: response tidak boleh nil"
+
+  invalid_service_token:
+    code: CFG008
+    en: must be canonical unpadded base64url encoding of 32 to 256 bytes
+    id: harus berupa base64url kanonis tanpa padding dari 32 sampai 256 byte
+
+  service_credentials_require_tls:
+    code: CFG009
+    en: must be true when using service credentials
+    id: harus true saat menggunakan credential service
+
   value_required:
     code: CFG001
     en: must not be empty
@@ -170,3 +225,21 @@ errors:
     code: HDL002
     en: "create users HTTP handler: response writer must not be nil"
     id: "membuat handler HTTP users: response writer tidak boleh nil"
+
+  auth_handler_response_writer_required:
+    code: HDL003
+    en: "create auth HTTP handler: response writer must not be nil"
+    id: "membuat handler HTTP auth: response writer tidak boleh nil"
+
+  grpc_profile_service_required:
+    code: GRPC014
+    en: "create auth gRPC client: profile service must not be nil"
+    id: "membuat client gRPC auth: profile service tidak boleh nil"
+  grpc_profile_request_required:
+    code: GRPC015
+    en: "execute UpdateProfile request: request must not be nil"
+    id: "menjalankan request UpdateProfile: request tidak boleh nil"
+  grpc_profile_response_required:
+    code: GRPC016
+    en: "execute UpdateProfile request: response must not be nil"
+    id: "menjalankan request UpdateProfile: response tidak boleh nil"

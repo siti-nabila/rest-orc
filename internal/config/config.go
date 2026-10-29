@@ -1,89 +1,72 @@
 package config
 
-import (
-	"os"
-
-	"github.com/goccy/go-yaml"
-	"github.com/siti-nabila/rest-orc/pkg/dictionary"
-)
+import "os"
 
 type Config struct {
-	App     AppConfig     `yaml:"app"`
-	Server  ServerConfig  `yaml:"server"`
-	Clients ClientsConfig `yaml:"clients"`
+	App     AppConfig
+	Server  ServerConfig
+	Clients ClientsConfig
+	Browser BrowserConfig
 }
 
 type AppConfig struct {
-	Name string `yaml:"name"`
-	Env  string `yaml:"env"`
-	Port int    `yaml:"port"`
+	Name string
+	Env  string
+	Port int
 }
 
 type ServerConfig struct {
-	ReadTimeout     Duration `yaml:"read_timeout"`
-	WriteTimeout    Duration `yaml:"write_timeout"`
-	IdleTimeout     Duration `yaml:"idle_timeout"`
-	ShutdownTimeout Duration `yaml:"shutdown_timeout"`
+	ReadTimeout     Duration
+	WriteTimeout    Duration
+	IdleTimeout     Duration
+	ShutdownTimeout Duration
 }
 
 type ClientsConfig struct {
-	AuthGRPC GRPCClientConfig `yaml:"auth_grpc"`
-	// BackendHTTP HTTPClientConfig `yaml:"backend_http"`
+	AuthGRPC GRPCClientConfig
+	// BackendHTTP HTTPClientConfig
 }
 
 type GRPCClientConfig struct {
-	Target                 string              `yaml:"target"`
-	RequestTimeout         Duration            `yaml:"request_timeout"`
-	MaxReceiveMessageBytes int                 `yaml:"max_receive_message_bytes"`
-	MaxSendMessageBytes    int                 `yaml:"max_send_message_bytes"`
-	TLS                    TLSConfig           `yaml:"tls"`
-	Keepalive              GRPCKeepaliveConfig `yaml:"keepalive"`
+	Target                 string
+	ServiceToken           string
+	RequestTimeout         Duration
+	MaxReceiveMessageBytes int
+	MaxSendMessageBytes    int
+	TLS                    TLSConfig
+	Keepalive              GRPCKeepaliveConfig
 }
 
 type HTTPClientConfig struct {
-	BaseURL        string              `yaml:"base_url"`
-	RequestTimeout Duration            `yaml:"request_timeout"`
-	TLS            TLSConfig           `yaml:"tls"`
-	Keepalive      HTTPKeepaliveConfig `yaml:"keepalive"`
+	BaseURL        string
+	RequestTimeout Duration
+	TLS            TLSConfig
+	Keepalive      HTTPKeepaliveConfig
 }
 
 type TLSConfig struct {
-	Enabled    bool   `yaml:"enabled"`
-	ServerName string `yaml:"server_name"`
-	CAFile     string `yaml:"ca_file"`
+	Enabled    bool
+	ServerName string
+	CAFile     string
 }
 
 type GRPCKeepaliveConfig struct {
-	Enabled bool     `yaml:"enabled"`
-	Time    Duration `yaml:"time"`
-	Timeout Duration `yaml:"timeout"`
+	Enabled bool
+	Time    Duration
+	Timeout Duration
 }
 
 type HTTPKeepaliveConfig struct {
-	Enabled                   bool     `yaml:"enabled"`
-	MaxIdleConnections        int      `yaml:"max_idle_connections"`
-	MaxIdleConnectionsPerHost int      `yaml:"max_idle_connections_per_host"`
-	MaxConnectionsPerHost     int      `yaml:"max_connections_per_host"`
-	IdleConnectionTimeout     Duration `yaml:"idle_connection_timeout"`
-	ResponseHeaderTimeout     Duration `yaml:"response_header_timeout"`
+	Enabled                   bool
+	MaxIdleConnections        int
+	MaxIdleConnectionsPerHost int
+	MaxConnectionsPerHost     int
+	IdleConnectionTimeout     Duration
+	ResponseHeaderTimeout     Duration
 }
 
-func Load(path string) (*Config, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, dictionary.OpenConfiguration(path, err)
-	}
-
+func Load() (*Config, error) {
 	var cfg Config
-	decodeErr := yaml.NewDecoder(file, yaml.Strict()).Decode(&cfg)
-	closeErr := file.Close()
-	if decodeErr != nil {
-		return nil, dictionary.DecodeConfiguration(path, decodeErr)
-	}
-	if closeErr != nil {
-		return nil, dictionary.CloseConfiguration(path, closeErr)
-	}
-
 	if err := applyEnvironment(&cfg, os.LookupEnv); err != nil {
 		return nil, err
 	}

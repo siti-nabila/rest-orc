@@ -9,14 +9,14 @@ import (
 )
 
 type List struct {
-	repository domain.Repository
+	gateway domain.Gateway
 }
 
-func NewList(repository domain.Repository) (*List, error) {
-	if repository == nil {
-		return nil, dictionary.ErrUsersUseCaseRepositoryRequired
+func NewList(gateway domain.Gateway) (*List, error) {
+	if gateway == nil {
+		return nil, dictionary.ErrUsersUseCaseGatewayRequired
 	}
-	return &List{repository: repository}, nil
+	return &List{gateway: gateway}, nil
 }
 
 func (usecase *List) Execute(
@@ -27,5 +27,5 @@ func (usecase *List) Execute(
 		return pagination.Page[domain.ListItem]{},
 			dictionary.ErrUsersUseCaseContextRequired
 	}
-	return usecase.repository.List(ctx, query)
+	return usecase.gateway.List(ctx, query)
 }
