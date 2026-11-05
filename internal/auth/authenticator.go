@@ -44,12 +44,9 @@ func (authenticator *Authenticator) Authenticate(
 		return nil, err
 	}
 
-	principal := Principal{
-		ID:        user.GetId(),
-		Email:     user.GetEmail(),
-		Fullname:  user.GetFullname(),
-		RoleCodes: append([]int32(nil), user.GetRoleCodes()...),
-		RoleNames: append([]string(nil), user.GetRoleNames()...),
+	principal, err := principalFromMe(user)
+	if err != nil {
+		return nil, err
 	}
 	return WithPrincipal(outboundContext, principal), nil
 }

@@ -1,0 +1,61 @@
+errors:
+  invalid_initial_user_status:
+    en: must be PENDING when creating a user
+    id: harus PENDING saat membuat user
+    zh: 创建用户时必须为 PENDING
+  invalid_user_status:
+    en: must be PENDING, ACTIVE, SUSPENDED or DEACTIVATED
+    id: harus PENDING, ACTIVE, SUSPENDED atau DEACTIVATED
+    zh: 必须为 PENDING、ACTIVE、SUSPENDED 或 DEACTIVATED
+  invalid_status_reason_characters:
+    en: must contain only printable ASCII and CR or LF
+    id: hanya boleh berisi ASCII tercetak serta CR atau LF
+    zh: 只能包含可打印 ASCII 及回车或换行
+  password_must_differ:
+    en: must differ from the current password
+    id: harus berbeda dari password saat ini
+    zh: 必须与当前密码不同
+  invalid_password_characters:
+    en: contains invalid characters
+    id: mengandung karakter tidak valid
+    zh: 包含无效字符
+  invalid_profile_characters:
+    en: contains invalid characters
+    id: mengandung karakter tidak valid
+    zh: 包含无效字符
+  invalid_country_code:
+    en: must be a calling code of 1 to 3 digits with no leading zero
+    id: harus berupa kode telepon 1 sampai 3 digit tanpa awalan nol
+    zh: 必须为一至三位且不以零开头的电话区号
+  invalid_phone:
+    en: must contain only ASCII digits
+    id: hanya boleh berisi digit ASCII
+    zh: 只能包含 ASCII 数字
+  invalid_session_id:
+    en: must be a canonical lowercase UUID
+    id: harus berupa UUID huruf kecil dengan format kanonis
+    zh: 必须为规范的小写 UUID
+  invalid_session_pagination:
+    en: invalid session pagination value
+    id: nilai pagination sesi tidak valid
+    zh: 会话分页值无效
+  unsupported_session_control:
+    en: this session list control is not supported
+    id: kontrol daftar sesi ini tidak didukung
+    zh: 不支持此会话列表参数
+  invalid_session_user_id:
+    en: must be a decimal user ID between 1 and 2147483647
+    id: harus berupa ID user desimal antara 1 dan 2147483647
+    zh: 必须为 1 至 2147483647 之间的十进制用户标识
+  invalid_session_idempotency_key:
+    en: requires exactly one nonblank printable ASCII key of 1 to 200 bytes
+    id: wajib satu key ASCII tercetak yang tidak kosong sepanjang 1 sampai 200 byte
+    zh: 需要一个非空的 1 至 200 字节可打印 ASCII 键
+  invalid_session_version:
+    en: requires exactly one decimal version between 1 and 9223372036854775807
+    id: wajib satu versi desimal antara 1 dan 9223372036854775807
+    zh: 需要一个 1 至 9223372036854775807 之间的十进制版本
+  invalid_user_id:
+    en: must be a decimal user ID between 1 and 2147483647
+    id: harus berupa ID user desimal antara 1 dan 2147483647
+    zh: 必须为 1 至 2147483647 之间的十进制用户标识

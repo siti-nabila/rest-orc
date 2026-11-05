@@ -33,6 +33,9 @@ func (writer *Writer) Write(ctx fiber.Ctx, result Result) error {
 	if result.Err != nil {
 		language := requestLanguage(ctx)
 		mapped := writer.errorMapper.Map(result.Err, language)
+		if mapped.RetryAfter != "" {
+			ctx.Set(fiber.HeaderRetryAfter, mapped.RetryAfter)
+		}
 		return ctx.Status(mapped.Status).JSON(mapped.Body)
 	}
 

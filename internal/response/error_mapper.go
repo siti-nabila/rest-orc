@@ -1,7 +1,9 @@
 package response
 
 import (
+	"context"
 	"errors"
+	"strconv"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/siti-nabila/api-contracts/pkg/dictionary"
@@ -13,8 +15,9 @@ import (
 )
 
 type MappedError struct {
-	Status int
-	Body   any
+	Status     int
+	Body       any
+	RetryAfter string
 }
 
 type ErrorMapper struct {
@@ -34,6 +37,9 @@ func (mapper *ErrorMapper) Map(
 	if decoded, ok := grpcerror.Decode(err); ok {
 		return mapper.mapGRPCError(decoded, language)
 	}
+	if fields, ok := localFieldErrors(err, language); ok {
+		return fieldError(fiber.StatusBadRequest, common.ErrBadRequest.Code(), fields)
+	}
 
 	if applicationError, ok := errors.AsType[*dictionary.Error](err); ok {
 		return descriptionError(
@@ -46,6 +52,12 @@ func (mapper *ErrorMapper) Map(
 	if fiberError, ok := errors.AsType[*fiber.Error](err); ok {
 		return mapper.mapFiberError(fiberError, language)
 	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return mappedDefinition(common.ErrDeadlineExceeded, language)
+	}
+	if errors.Is(err, context.Canceled) {
+		return mappedDefinition(common.ErrRequestCanceled, language)
+	}
 
 	return internalError(language)
 }
@@ -54,47 +66,51 @@ func (mapper *ErrorMapper) mapGRPCError(
 	decoded grpcerror.Decoded,
 	language locale.Language,
 ) MappedError {
-	if decoded.HasFieldErrors() {
-		return MappedError{
-			Status: common.ErrBadRequest.HTTPStatus(),
-			Body: contractresponse.FieldError{
-				Code:   common.ErrBadRequest.Code(),
-				Errors: decoded.FieldErrors,
-				Data:   contractresponse.EmptyData(),
-			},
-		}
-	}
-
+	httpStatus, fallback := grpcFallback(decoded.Code)
+	code := fallback.Code()
+	message := fallback.Message(language)
 	if definition, exists := decoded.Definition(mapper.registries...); exists {
-		return descriptionError(
-			definition.HTTPStatus(),
-			definition.Code(),
-			definition.Message(language),
-		)
+		httpStatus = definition.HTTPStatus()
+		code = definition.Code()
+		message = definition.Message(language)
 	}
 
-	return mapper.mapUnregisteredGRPCCode(decoded.Code, language)
+	if explicitStatus, err := strconv.Atoi(decoded.Metadata["http_status"]); err == nil && explicitStatus >= 400 && explicitStatus <= 599 {
+		httpStatus = explicitStatus
+	}
+	if publicCode := decoded.Metadata["code"]; publicCode != "" {
+		code = publicCode
+	}
+	mapped := descriptionError(httpStatus, code, message)
+	if decoded.HasFieldErrors() {
+		mapped = fieldError(httpStatus, code, decoded.FieldErrors)
+	}
+	mapped.RetryAfter = retryAfter(decoded.RetryInfo)
+	return mapped
 }
 
-func (mapper *ErrorMapper) mapUnregisteredGRPCCode(
-	code codes.Code,
-	language locale.Language,
-) MappedError {
+func grpcFallback(code codes.Code) (int, *dictionary.Error) {
 	switch code {
-	case codes.InvalidArgument:
-		return mappedDefinition(common.ErrBadRequest, language)
+	case codes.InvalidArgument, codes.FailedPrecondition:
+		return fiber.StatusBadRequest, common.ErrBadRequest
 	case codes.Unauthenticated:
-		return mappedDefinition(common.ErrUnauthorized, language)
+		return fiber.StatusUnauthorized, common.ErrUnauthorized
 	case codes.PermissionDenied:
-		return mappedDefinition(common.ErrForbidden, language)
+		return fiber.StatusForbidden, common.ErrForbidden
 	case codes.NotFound:
-		return mappedDefinition(common.ErrNotFound, language)
+		return fiber.StatusNotFound, common.ErrNotFound
+	case codes.AlreadyExists, codes.Aborted:
+		return fiber.StatusConflict, common.ErrInternalServerError
+	case codes.ResourceExhausted:
+		return fiber.StatusTooManyRequests, common.ErrRateLimited
 	case codes.Unavailable:
-		return mappedDefinition(common.ErrServiceUnavailable, language)
+		return fiber.StatusServiceUnavailable, common.ErrServiceUnavailable
 	case codes.DeadlineExceeded:
-		return mappedDefinition(common.ErrDeadlineExceeded, language)
+		return fiber.StatusGatewayTimeout, common.ErrDeadlineExceeded
+	case codes.Canceled:
+		return common.ErrRequestCanceled.HTTPStatus(), common.ErrRequestCanceled
 	default:
-		return internalError(language)
+		return fiber.StatusInternalServerError, common.ErrInternalServerError
 	}
 }
 
@@ -109,6 +125,8 @@ func (mapper *ErrorMapper) mapFiberError(
 		return mappedDefinition(common.ErrUnauthorized, language)
 	case fiber.StatusForbidden:
 		return mappedDefinition(common.ErrForbidden, language)
+	case fiber.StatusUnsupportedMediaType:
+		return descriptionError(fiber.StatusUnsupportedMediaType, common.ErrBadRequest.Code(), common.ErrBadRequest.Message(language))
 	case fiber.StatusNotFound:
 		return mappedDefinition(common.ErrEndpointNotFound, language)
 	default:
@@ -129,6 +147,17 @@ func mappedDefinition(
 
 func internalError(language locale.Language) MappedError {
 	return mappedDefinition(common.ErrInternalServerError, language)
+}
+
+func fieldError(status int, code string, fields map[string][]string) MappedError {
+	return MappedError{
+		Status: status,
+		Body: contractresponse.FieldError{
+			Code:   code,
+			Errors: fields,
+			Data:   contractresponse.EmptyData(),
+		},
+	}
 }
 
 func descriptionError(status int, code string, description string) MappedError {

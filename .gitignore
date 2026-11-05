@@ -24,15 +24,40 @@ profile.cov
 go.work
 go.work.sum
 
-# env file
-.env
+logs/
+bin
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
 
+# Local AI agent instructions
 AGENTS.md
-env.yaml
-Makefile
+
 .DS_Store
-bin/
+graphify-out/
+
+# Local agent configuration and generated codebase graphs
+.agents/
+.codex/
+.claude/
+.graphifyignore
+
+# Local runtime configuration and credentials
+.env
+.env.*
+
+.env.example
+/env.yaml
+/env-test.yaml
+/env.*.yaml
+
+!/env.example.yaml
+secrets/
+*.key
+*.pem
+
+# Generated test and profiling directories
+coverage/
+test-results/
+playwright-report/

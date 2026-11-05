@@ -3,16 +3,17 @@ module github.com/siti-nabila/rest-orc
 go 1.26.2
 
 require (
-	github.com/goccy/go-yaml v1.19.2
 	github.com/gofiber/fiber/v3 v3.4.0
-	github.com/siti-nabila/api-contracts v0.0.0-20260803064555-df4684bcd60d
-	github.com/siti-nabila/error-package v0.0.9
+	github.com/siti-nabila/api-contracts v0.0.0-20261023084653-d32fd5c1bab4
+	github.com/siti-nabila/error-package v0.0.10-0.20260927130242-e06b69ef855d
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa
 	google.golang.org/grpc v1.83.0
 	google.golang.org/protobuf v1.36.11
 )
 
 require (
 	github.com/andybalholm/brotli v1.2.2 // indirect
+	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/gofiber/schema v1.8.0 // indirect
 	github.com/gofiber/utils/v2 v2.1.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -28,5 +29,4 @@ require (
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 )

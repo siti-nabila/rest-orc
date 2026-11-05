@@ -2,6 +2,7 @@ package grpcclient
 
 import (
 	"context"
+	"crypto/tls"
 	"time"
 
 	"github.com/siti-nabila/rest-orc/internal/client/tlsconfig"
@@ -18,28 +19,38 @@ type Client struct {
 	requestTimeout time.Duration
 }
 
-func New(cfg config.GRPCClientConfig) (*Client, error) {
-	transportCredentials, err := newTransportCredentials(cfg.TLS)
+func New(cfg config.GRPCClientConfig, options ...grpc.DialOption) (*Client, error) {
+	if cfg.ServiceToken != "" {
+		if err := cfg.ValidateServiceCredentials("grpc_client"); err != nil {
+			return nil, err
+		}
+	}
+	transportCredentials, err := newTransportCredentials(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	options := []grpc.DialOption{
+	// Apply configuration-owned security after optional transport options.
+	dialOptions := append([]grpc.DialOption{}, options...)
+	dialOptions = append(dialOptions,
 		grpc.WithTransportCredentials(transportCredentials),
 		grpc.WithDefaultCallOptions(
 			grpc.MaxCallRecvMsgSize(cfg.MaxReceiveMessageBytes),
 			grpc.MaxCallSendMsgSize(cfg.MaxSendMessageBytes),
 		),
+	)
+	if cfg.ServiceToken != "" {
+		dialOptions = append(dialOptions, grpc.WithPerRPCCredentials(serviceCredentials{token: cfg.ServiceToken}))
 	}
 	if cfg.Keepalive.Enabled {
-		options = append(options, grpc.WithKeepaliveParams(keepalive.ClientParameters{
+		dialOptions = append(dialOptions, grpc.WithKeepaliveParams(keepalive.ClientParameters{
 			Time:                cfg.Keepalive.Time.Duration,
 			Timeout:             cfg.Keepalive.Timeout.Duration,
 			PermitWithoutStream: false,
 		}))
 	}
 
-	connection, err := grpc.NewClient(cfg.Target, options...)
+	connection, err := grpc.NewClient(cfg.Target, dialOptions...)
 	if err != nil {
 		return nil, dictionary.CreateGRPCClient(cfg.Target, err)
 	}
@@ -65,14 +76,17 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func newTransportCredentials(cfg config.TLSConfig) (credentials.TransportCredentials, error) {
-	if !cfg.Enabled {
+func newTransportCredentials(cfg config.GRPCClientConfig) (credentials.TransportCredentials, error) {
+	if !cfg.TLS.Enabled {
 		return insecure.NewCredentials(), nil
 	}
 
-	tlsConfig, err := tlsconfig.New(cfg)
+	tlsConfig, err := tlsconfig.New(cfg.TLS)
 	if err != nil {
 		return nil, dictionary.ConfigureGRPCClientTLS(err)
+	}
+	if cfg.ServiceToken != "" {
+		tlsConfig.MinVersion = tls.VersionTLS13
 	}
 	return credentials.NewTLS(tlsConfig), nil
 }

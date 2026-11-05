@@ -39,6 +39,12 @@ func (cfg *Config) Validate() error {
 	if err := cfg.Clients.AuthGRPC.validate("clients.auth_grpc"); err != nil {
 		return err
 	}
+	if err := cfg.Clients.AuthGRPC.ValidateServiceCredentials("clients.auth_grpc"); err != nil {
+		return err
+	}
+	if err := cfg.Browser.Validate(cfg.Clients.AuthGRPC.ServiceToken); err != nil {
+		return err
+	}
 	// return cfg.Clients.BackendHTTP.validate("clients.backend_http")
 	return nil
 }
