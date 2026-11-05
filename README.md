@@ -1077,3 +1077,315 @@ Backend errors/status/field messages/Retry-After dan deadline/cancellation memak
 shared mapper, tanpa retry atau success-only browser effects saat gagal. Tests
 menggunakan fake SDK, TLS bufconn, dan concurrent/race scenarios; real backend/FE
 smoke test dan deployment dilakukan terpisah setelah diotorisasi.
+
+## Admin Session Management
+
+Administrasi sesi user target dimiliki feature users. Satu Me memverifikasi actor;
+user target berasal dari path dan tidak menggantikan identitas bearer. Semua route
+memerlukan bearer aktif dan `must_change_password=false`.
+
+| Method | Route | Exact permission |
+| --- | --- | --- |
+| GET | `/api/v1/users/{user_id}/sessions` | `iam.session.read=true` |
+| DELETE | `/api/v1/users/{user_id}/sessions/{session_id}` | `iam.session.revoke=true` |
+| POST | `/api/v1/users/{user_id}/sessions/revoke-all` | `iam.session.revoke=true` |
+
+Non-admin dengan permission tepat boleh mengakses; role admin, wildcard, permission
+false, atau klaim browser tidak menggantikan permission. ListUsers tetap memakai
+gate role admin, sedangkan `/api/v1/me/sessions` tetap memakai policy sesi sendiri.
+
+| Input | Validasi |
+| --- | --- |
+| `user_id` path | Digit ASCII, 1–2147483647; leading zeros diterima |
+| `session_id` path | UUID kanonis lowercase, termasuk all-zero |
+| `page` / `limit` | Default 1/20; 1–2147483647 / 1–100; duplicate ditolak |
+| `last_id` | Opaque, sekali URL-decoded, maksimal 2048 byte; duplicate ditolak |
+| `Idempotency-Key` | Kedua mutation: tepat satu header, 1–200 byte ASCII tercetak, tidak seluruh spasi; internal space/comma dipertahankan |
+| `Version` | Revoke-all: tepat satu header digit ASCII, 1–9223372036854775807; leading zeros diterima |
+
+List menolak sort/fields/search/keyword/statuses/application_code/created_from/created_to
+termasuk nilai kosong; unknown query claims diabaikan. Body semua operasi diabaikan,
+termasuk malformed JSON. Target, key, dan version tidak diambil dari body/query.
+
+Contoh list, dengan urutan fixed `created_at DESC, id DESC` dan total `int64`:
+
+```json
+{"code":"SS","message":"User sessions retrieved successfully.","data":{"items":[{"id":"abcdefab-abcd-abcd-abcd-abcdefabcdef","user_id":23,"status":"ACTIVE","created_at":"2020-01-01T00:00:00.123456789Z","last_seen_at":null,"expires_at":"2020-01-08T00:00:00Z","revoked_at":null,"device_label":"","user_agent":"","ip_address":"","is_current":false}],"total":2147483648,"page":1,"limit":20,"total_pages":107374183,"has_next":true,"has_prev":true,"next_cursor":"opaque-next"}}
+```
+
+Status/timestamp historis, backend `is_current`, flags dan cursor dipertahankan;
+owner row wajib sama dengan target. Ubah target/limit berarti caller perlu reset
+cursor sesuai binding backend. Empty page memakai `items:[]` tanpa mereset total.
+
+Contoh mutation success (HTTP 200), termasuk `changed=false`:
+
+```json
+{"code":"SS","message":"User session revoked successfully.","data":{"changed":false}}
+{"code":"SS","message":"All user sessions revoked successfully.","data":{"changed":false,"version":"9007199254740993"}}
+```
+
+Revoke-all membutuhkan **entity Version user target** dari authoritative read yang
+caller miliki. Versi Me adalah versi actor dan tidak dipakai sebagai target version.
+`GET /api/v1/users/{user_id}` menyediakan sumber versi melalui capability User Detail
+dengan exact `iam.user.read`; ListUsers tidak diperluas.
+Version response berupa string desimal backend, termasuk nilai di atas 2^53, tanpa
+menghitung input+1 atau menolak committed replay berdasarkan perbandingan versi.
+Single revoke/list mengabaikan Version; list mengabaikan Idempotency-Key.
+
+Setiap retry oleh caller menjalankan satu Me dan satu eligible business RPC. Backend
+memiliki replay, fingerprint, current-authority checks, version/idempotency conflict,
+audit dan transaksi. Tidak ada local replay cache atau automatic retry/version refresh.
+Setelah response hilang, caller dapat mengulang request/key yang sama sesuai kontrak
+backend; conflict 409 memerlukan caller menyelesaikan konflik, bukan retry otomatis
+oleh REST. Status/code/field errors/Retry-After, 429/503, timeout 504 dan cancel 499
+mengikuti mapper existing.
+
+Semua response, error dan preflight memakai `Cache-Control: no-store`. Operasi admin
+tidak memasang/menghapus cookie, menerbitkan credential, atau memerlukan CSRF, termasuk
+target=actor, replay, dan changed=false. Tidak ada inferred login_required atau current
+session outcome; request berikutnya tetap diverifikasi backend. `/users/me/sessions`
+bukan alias self-session: literal `me` adalah target ID invalid. URL dan policy
+`/api/v1/me/sessions`, public Register/Login, password dan profile tetap.
+
+Shared generated SDK memakai satu verified TLS1.3 connection, service token dari env,
+bearer asli, locale/request ID dan parent deadline/cancellation. Operator perlu grants
+`/session.v1.SessionService/ListUserSessions`, `RevokeUserSession`, dan
+`RevokeAllUserSessions`, namespace IAM, serta exact user permissions. Tidak ada grant
+otomatis berdasarkan role. HTTP integration memakai fake SDK, wire tests memakai TLS
+bufconn; smoke test backend/FE nyata dan deployment berada di luar verifikasi ini.
+
+```sh
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache go test ./test/features/users/... ./test/client/authservice/... ./test/integration/users/... ./test/integration/authservice/... ./test/app/...
+```
+
+## User Detail
+
+`GET /api/v1/users/{user_id}` adalah pembacaan detail target milik feature users.
+Path `user_id` wajib digit ASCII dalam 1–2147483647; leading zeros diterima secara
+numerik, tanpa trim/sign/hex/overflow. Body, query, Version dan Idempotency-Key
+diabaikan, termasuk body malformed dan mutation headers berulang/tidak valid.
+
+| Actor | Detail |
+| --- | --- |
+| Unrestricted dengan exact `iam.user.read=true`, termasuk non-admin | Satu Me lalu satu GetUser |
+| Restricted, permission missing/false/wildcard, role-admin saja, session permission saja | 403 tanpa GetUser |
+| Bearer absen / Me gagal | 401 / safe mapped error; tanpa GetUser |
+
+Actor dan target independen, termasuk bila ID sama. Detail mengembalikan hanya
+`id`, `email`, `name`, `address`, `phone`, `country_code`, `status`, `version`,
+`created_at`, `must_change_password`, `roles`, dan `application_access`.
+Version adalah entity version target sebagai string desimal positif int64;
+creation time wajib valid dan mempertahankan fractional precision dalam UTC.
+Assignments memiliki numeric role_id/application_id dan code/name/status serta
+role_status/application_status; arrays kosong ditulis `[]`. Stored profile text,
+assignment order/status dan restriction flag target dipertahankan. Tidak ada
+password/dob/token/hash/auth_version, legacy role codes/names atau computed
+permissions pada DTO; assignments target tidak memberikan authority ke actor.
+
+Contoh response HTTP 200:
+
+```json
+{"code":"SS","message":"User retrieved successfully.","data":{"id":23,"email":"target@example.com","name":" Legacy NAME ","address":"Legacy\taddress","phone":"+62+628123","country_code":"+62","status":"ACTIVE","version":"9007199254740993","created_at":"2026-10-20T08:09:10.123456789Z","must_change_password":false,"roles":[{"role_id":11,"code":"iam.reader","name":"Reader","status":"REVOKED","role_status":"DISABLED"},{"role_id":9,"code":"clm.member","name":"Member","status":"ACTIVE","role_status":"ACTIVE"}],"application_access":[{"application_id":5,"code":"clm","name":"CLM","status":"REVOKED","application_status":"DISABLED"}]}}
+```
+
+Account status target boleh PENDING/ACTIVE/SUSPENDED/DEACTIVATED dan target
+must_change_password=true tetap dapat dibaca oleh actor yang eligible. Ini bukan
+policy restricted actor pada Me; informasi assignment backend tidak dihapus atau
+diubah menjadi effective permissions. Nil/malformed success, target ID berbeda,
+version di luar 1–MaxInt64, missing/invalid creation timestamp, atau nil/invalid
+assignment ID gagal aman sebagai 500 tanpa partial detail.
+
+Gateway memakai salinan metadata, menghapus inherited version/idempotency-key
+pada read, dan mempertahankan bearer/locale/request ID/deadline/cancellation.
+Shared UserDetailService membungkus generated GetUser pada connection existing,
+tanpa memperlebar interface Service atau mengubah constructor lama.
+
+Detail memakai authentication per route sebelum legacy role-admin users group;
+ListUsers tetap memakai gate role yang sama. `/api/v1/me` tetap policy dan DTO
+actor sendiri; `/api/v1/users/me` adalah ID target invalid, bukan self alias.
+Public Register/Login serta profile/password/lifecycle/self/admin-session tetap.
+Semua success/error/preflight detail memakai `Cache-Control: no-store`, termasuk
+failed Me, invalid ID dan CORS rejection sebelum handler. Cookie tidak menjadi
+fallback bearer dan detail tidak memerlukan CSRF atau memasang/menghapus cookie,
+termasuk target=self. Backend error/status/code/locale/field/Retry-After memakai
+mapper existing tanpa retry, cached detail atau fallback Me/ListUsers.
+
+Caller dapat membaca detail target 23 lalu meneruskan `data.version` persis sebagai
+header `Version` pada request revoke-all terpisah untuk target yang sama, bersama
+`Idempotency-Key` milik mutation. Contoh urutan (access token tetap di memory caller):
+
+```http
+GET /api/v1/users/23
+Authorization: Bearer <access-token>
+```
+
+```http
+POST /api/v1/users/23/sessions/revoke-all
+Authorization: Bearer <access-token>
+Version: 9007199254740993
+Idempotency-Key: user-23-revoke-request-1
+```
+
+Detail memerlukan `iam.user.read`, revoke-all memerlukan `iam.session.revoke`.
+Read permission tidak memberikan session permission dan sebaliknya. Tiap request
+menjalankan satu Me dan satu business RPC; mutation tidak melakukan GetUser internal.
+Dua request ini tidak atomik: target dapat berubah setelah read dan menyebabkan
+backend conflict 409. REST tidak mengganti versi dengan Me actor, menambah versi,
+refetch detail atau retry mutation otomatis. Setiap GET memperoleh hasil baru,
+tanpa cross-request cache; committed replay mutation mengikuti kontrak backend.
+
+Operator menyiapkan exact method grant `/user.v1.UserService/GetUser`, namespace IAM,
+dan permission user-read. Connection tetap TLS1.3 dengan satu env-owned service
+credential dan deadline/cancellation existing. Pengujian fake SDK dan generated SDK
+TLS bufconn tidak menggantikan smoke test backend/FE nyata atau deployment.
+
+```sh
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache go test ./test/features/users/... ./test/client/authservice/... ./test/integration/users/... ./test/integration/authservice/... ./test/app/...
+```
+
+Verifikasi concurrency detail (2026-11-04): command berikut lulus 1.012 test tanpa
+race, termasuk mixed detail/admin/self-session/public auth/ListUsers pada satu
+TLS connection dengan actor, target, permission, version dan metadata berbeda.
+
+```sh
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache go test -race ./test/features/users/... ./test/client/authservice/... ./test/integration/users/... ./test/integration/authservice/... ./test/integration/auth/... ./test/app/... ./test/features/auth/handler/...
+```
+
+### User status management
+
+`PATCH /api/v1/users/{user_id}/status` requires bearer authentication, an unrestricted actor and exact `iam.user.status.update=true`. Roles and read/session permissions do not grant this operation. The actor from Me and the path target are independent.
+
+| Input | Contract |
+| --- | --- |
+| user_id path | ASCII decimal 1–2147483647; leading zeros accepted |
+| Version header | Exactly one ASCII decimal 1–9223372036854775807; target entity version, never Me.version |
+| Idempotency-Key header | Exactly one nonblank printable ASCII value, 1–200 bytes; opaque spaces/commas preserved |
+| status JSON string | Required, exactly PENDING, ACTIVE, SUSPENDED or DEACTIVATED |
+| reason JSON string | Required; raw printable ASCII plus CR/LF only, then trim surrounding spaces/CR/LF; 3–500 bytes |
+
+Reason validation rejects tabs, controls and Unicode before trimming, preserving internal spaces, punctuation and CR/LF. Missing/null fields fail validation; independent status/reason errors are localized together. Body/query/header claims cannot replace designated input sources. Backend owns transitions, current authority, self/last-admin protection, same-status no-op (including PENDING), replay, audit and session revocation. Every eligible mutation dispatches once, with no target read or REST retry.
+
+Success uses HTTP 200/code `SS`, message `User status updated successfully.`, and exactly `{"user_id":23,"status":"ACTIVE","version":"9007199254740993","changed":false}` as data. Version remains a decimal string; false is explicit. No version increment or changed flag is inferred locally. Invalid dependency success fails safely without partial data.
+
+Only the versioned PATCH route is registered; `me` is not a numeric target alias. All status outcomes and preflights use `Cache-Control: no-store`, including early CORS/auth failures. Status operations require bearer, have no cookie fallback/CSRF requirement, and never set/clear cookies or issue tokens, even for self, no-op, replay or activation. Login remains a separate action.
+
+A caller with `iam.user.read` can GET `/api/v1/users/23` to obtain target `data.version`, then independently PATCH with `iam.user.status.update`:
+
+```http
+PATCH /api/v1/users/23/status
+Authorization: Bearer <access-token>
+Version: 9007199254740993
+Idempotency-Key: user-23-activation
+Content-Type: application/json
+
+{"status":"ACTIVE","reason":"Registration approved"}
+```
+
+Read/status permissions do not imply one another. The two requests are non-atomic; stale Version returns conflict without automatic detail refetch or retry. Status-only callers can provide a target version from another authorized source. Backend accepts same-state requests and otherwise owns PENDING→ACTIVE/DEACTIVATED, ACTIVE→SUSPENDED/DEACTIVATED, SUSPENDED→ACTIVE/DEACTIVATED and DEACTIVATED→ACTIVE. Backend current authority, self-inactivation and last-admin checks remain authoritative, including before replay. REST preserves encoded public status/code/fields and the existing localized fallback for unregistered user Reasons; no global error registry change is needed.
+
+Status verification uses root scenario runners: `GOWORK=off GOCACHE=/tmp/rest-orc-go-cache go test ./test/features/users/... ./test/client/authservice/... ./test/app/... ./test/integration/users/... ./test/integration/authservice/...`. Fake SDK HTTP tests cover authority, input, replay/error mapping and separate detail→status flow. TLS bufconn tests extend the existing UserService registration and verify the exact generated method/presence/metadata, TLS1.3, credential isolation, reusable connection and bounded cancellation. These controlled fakes do not prove real backend transaction/last-admin concurrency, grant provisioning, frontend integration or deployment; those require separate authorized rollout checks.
+
+Verifikasi status (2026-11-04) lulus: full suite 1.551 tes/95 package; race suite terarah 898 tes/28 package; build, vet, strict OpenSpec, dan whitespace checks. Skenario concurrency menjalankan 36 request status/detail/admin-session/self-session/Register/Login/ListUsers dengan barrier terkontrol, actor/target/key/version/reason/permission/metadata/output/cookie terpisah, satu koneksi TLS dan tanpa duplikasi Me.
+
+```sh
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test ./...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test -race ./test/integration/authservice/... ./test/integration/users/... ./test/client/authservice/... ./test/features/users/... ./test/app/...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go build ./...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go vet ./...
+rtk proxy openspec validate add-user-status-management --strict
+```
+
+### Update profil user target
+
+`PATCH /api/v1/users/{user_id}/profile` memerlukan bearer unrestricted dan exact `iam.user.update=true`; role admin, permission read/status/session dan target=self tidak menggantikannya. Actor dari Me dan target path independen. Tanpa field efektif, eligibility dan input teknis tetap diperiksa sebelum sukses lokal.
+
+| Input | Contract |
+| --- | --- |
+| user_id path | ASCII decimal 1–2147483647; leading zeros diterima |
+| Version header | Tepat satu decimal positif int64 sampai 9223372036854775807, wajib juga pada no-op; versi target, bukan Me.version |
+| Idempotency-Key header | Opsional; jika hadir tepat satu nonblank printable ASCII 1–200 byte, spaces/commas opaque; empty/duplicate tetap invalid |
+| Body | JSON object atau null; hanya string non-null name/address/phone/country_code dipilih; unknown/immutable fields dan field_mask caller diabaikan |
+
+Normalisasi memakai aturan profil existing: name ASCII letters/spaces/apostrophes/hyphens, trim/collapse ordinary spaces, capitalize word starts tanpa lowercase sisa huruf (3–100 byte); country code digit diberi plus lalu plus/nonzero-leading 1–3 digit tanpa trim; phone 12–20 digit setelah penghapusan satu prefix +62/62 lalu satu zero hanya jika country code +62 eksplisit dalam request ini. Address printable ASCII dan CR/LF 3–200 byte dipertahankan persis. Phone-only tidak menebak negara target; country-only tidak memilih phone. Empty string terpilih invalid, null/omitted diabaikan. Semua field error terpilih dilokalisasi bersama tanpa nilai pribadi; data caller tidak dimutasi.
+
+Satu Me diikuti nol RPC mutasi untuk no-op lokal atau satu UpdateUser jika ada field efektif. Input sama dengan profil sebelumnya tetap dikirim. No-op lokal berdata tepat {"changed":false}, tanpa user/version, lookup, audit atau reservasi/replay key, dan tidak membuktikan keberadaan target atau version terbaru meski header Version wajib valid secara sintaks. Backend tetap authoritative untuk changed, target/version/current authority, transaksi/audit dan optional-key replay; REST tidak cache, refetch atau retry otomatis. Read dan update permission independen.
+
+Mutation sukses memakai HTTP 200/code SS/message `User profile updated successfully.` dengan data tepat `{"changed":false,"user":<safe-user>}` (changed boleh true). `user` memiliki 12 field yang sama seperti detail: id/email/name/address/phone/country_code/status/version/created_at/must_change_password/roles/application_access. Versi presisi int64 berada di `data.user.version` sebagai string, timestamp UTC mempertahankan pecahan, array kosong [], false eksplisit, teks hasil backend tidak dinormalisasi ulang. Tidak ada profile ID/top-level version baru atau field credential/dob/auth_version/effective permission. Respons backend invalid/wrong-target menghasilkan safe 500 tanpa data parsial atau GetUser tambahan. Key tidak dikirim berarti tidak ada key pada metadata; inherited key/version dihapus dari salinan dan Version hanya pada payload.
+
+Contoh update target:
+
+```http
+PATCH /api/v1/users/23/profile
+Authorization: Bearer <access-token>
+Version: 9007199254740993
+Idempotency-Key: user-23-profile-edit
+Content-Type: application/json
+
+{"name":"  NASA  o'neil-jean  ","country_code":"62","phone":"0812345678901"}
+```
+
+Idempotency-Key boleh dihilangkan, tetapi jika dikirim wajib valid. JSON null/{} hanya menghasilkan local no-op sesudah semua guard; body kosong/malformed/array/scalar atau tipe field dikenal yang salah ditolak. Literal me bukan alias numeric; hanya route versioned PATCH /users/{user_id}/profile tersedia, tanpa PATCH /users/{user_id}, POST atau unversioned alias. Semua outcome dan preflight memakai no-store sebelum CORS/auth; tidak ada cookie fallback, CSRF/new Origin requirement, Set-Cookie, token atau login/logout inference, termasuk self/replay/no-op/error. Kebijakan self-profile existing tetap berlaku.
+
+Caller dengan iam.user.read dapat GET /api/v1/users/23 untuk memperoleh data.version, kemudian melakukan PATCH profil dengan grant iam.user.update secara terpisah. Request kedua memvalidasi authority lagi; read/update grant tidak saling mewarisi. Conflict VC tidak memicu refetch/version replacement/retry. Selected same value tetap memanggil UpdateUser. Keyed caller retry menjalankan Me baru dan satu eligible command; backend memutuskan replay/current denial/IC/VC/RB. Unkeyed call tidak memperoleh key atau jaminan replay buatan. Key pada no-op lokal tidak direservasi untuk command berikutnya.
+
+Verifikasi HTTP fake SDK dan TLS bufconn memakai root runners `./test/integration/users/...` dan `./test/integration/authservice/...`; UserService mock existing diperluas dengan UpdateUser, terpisah dari self-profile ProfileService. Pengujian memeriksa exact payload optional/mask/key/target-version, no-op lokal, safe snapshot, service credential tunggal, TLS1.3, koneksi reuse, locale/request ID/bearer, cancellation/deadline dan encoded public errors tanpa perlu global user registry baru. Fakes tidak membuktikan transaksi/replay persistence/locking backend nyata, grant provisioning, frontend atau deployment; real smoke/rollout terpisah.
+
+Verifikasi profil target (2026-11-04): focused runners lulus 1.091 tes/28 package; full suite 1.744 tes/95 package; targeted race 1.351 tes/33 package tanpa race report. Skenario concurrency memakai barrier terkontrol untuk 36 request profil target/no-op lokal/self-profile/detail/status/session/Register/Login/ListUsers, termasuk permission denial, partial fields, key opsional, actor/target/version berbeda dan response/cookie terpisah pada satu koneksi TLS. Build, vet, strict OpenSpec dan whitespace checks lulus.
+
+```sh
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test ./...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test -race ./test/integration/... ./test/features/users/... ./test/features/auth/handler/... ./test/client/authservice/... ./test/app/...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go build ./...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go vet ./...
+rtk proxy openspec validate add-user-profile-update --strict
+```
+
+### Admin user creation
+
+`POST /api/v1/users` membuat akun melalui CreateUser, terpisah dari public Register `POST /api/v1/users/create`. Bearer unrestricted wajib mempunyai exact `iam.user.create=true`; non-admin dengan grant ini boleh membuat user. Role admin, wildcard, atau grant read/update/status/session saja tidak cukup. Satu request eligible menjalankan satu Me lalu satu CreateUser, tanpa Register, lookup target, grant role/aplikasi, aktivasi atau login tambahan. Nil/invalid actor ditolak 401; restriction/grant ditolak 403 sebelum validasi bisnis.
+
+Body wajib JSON object dengan string non-null email, password, name, phone dan country_code. Address opsional: omitted/null tidak dipilih, tetapi string kosong gagal minimum 3 byte. Status omitted/null atau tepat PENDING diterima; nilai lain termasuk ACTIVE, string kosong dan pending ditolak dengan error initial-status tersendiri. Payload SDK selalu membawa pointer PENDING. Body kosong/malformed/null/array/scalar, tipe field dikenal yang salah, dan missing/null required gagal 400; {} bukan no-op. Field asing seperti confirm_password, IDs, roles, application_access, permissions, must_change_password dan field_mask diabaikan. Tidak ada default field dari Me.
+
+Credential memakai helper murni bersama `pkg/validation/credentials.go`, dengan katalog/error order dan signature auth lama tetap. Email diperiksa ASCII pada input asli, lalu view trim/lowercase sepanjang 6–50 byte memakai regex register existing; plus-addressing tetap ditolak. Raw email diteruskan utuh, misalnya ` User.Name@Example.COM `; backend melakukan canonicalization. Password wajib 6–50 byte ASCII 0x21–0x7e, tanpa space/control/Unicode, trim atau aturan komposisi. Nilai sederhana seperti `abcdef`, `123456`, `!!!!!!` valid. Login/current_password tetap length-only untuk karakter password lama; register/new_password memakai aturan credential baru yang sama. Field errors independen credential/profile/status digabung dan dilokalisasi EN/ID/ZH tanpa echo input.
+
+Profil dinormalisasi pada salinan satu kali di usecase. Name ASCII letters/spaces/apostrophe/hyphen menjadi 3–100 byte; `  NASA  o'neil-jean  ` menjadi `NASA O'Neil-Jean` tanpa mengubah akronim. Country digits ditambah plus, kemudian wajib 1–3 digit dengan digit awal nonzero; tidak di-trim atau diinferensikan. Phone wajib 12–20 digit. Hanya country eksplisit +62 yang menghapus satu prefix +62/62 dan paling banyak satu nol: `0812345678901` menjadi `812345678901`; `62628123456789` menjadi `628123456789`; `00628123456789` menjadi `0628123456789`. Gateway tidak mengulang normalisasi. Selected address 3–200 byte printable ASCII plus CR/LF disalin persis termasuk spasi; tab/Unicode ditolak.
+
+Wajib tepat satu parsed `Idempotency-Key` case-insensitive, nonblank printable ASCII 1–200 byte. Comma dan space internal bersifat opaque. Duplicate termasuk identical/case-varied ditolak; key tidak di-trim, dibuat, dihash atau diambil dari body/query/parent. Tidak ada target ID atau Version precondition. Version malformed/repeated tidak dipakai. Gateway menyalin metadata, menghapus inherited version/key dan memasang satu key terpilih; bearer, locale, request ID, cancellation/deadline dan kebijakan fail-closed service token tetap berlaku.
+
+```http
+POST /api/v1/users
+Authorization: Bearer <access-token>
+Idempotency-Key: create-user-23
+Content-Type: application/json
+
+{"email":"user.name@example.com","password":"abcdef","name":"  NASA  o'neil-jean  ","phone":"0812345678901","country_code":"62","address":"Jl. Melati 7"}
+```
+
+Sukses memakai HTTP 200, code SS, message `User created successfully.`, dengan data tepat user. Contoh snapshot backend:
+
+```json
+{"code":"SS","message":"User created successfully.","data":{"user":{"id":23,"email":"user.name@example.com","name":"NASA O'Neil-Jean","address":"Jl. Melati 7","phone":"812345678901","country_code":"+62","status":"PENDING","version":"9007199254740993","created_at":"2026-11-04T08:09:10.123456789Z","must_change_password":true,"roles":[],"application_access":[]}}}
+```
+
+User mempunyai tepat 12 field detail. Roles berisi role_id/code/name/status/role_status; application_access berisi application_id/code/name/status/application_status. Numeric IDs harus positif dalam range PostgreSQL, version int64 positif berupa string presisi, timestamp UTC mempertahankan pecahan, arrays kosong [], false eksplisit, urutan dan teks backend dipertahankan. Email hasil harus persis canonical trim/lowercase input dan status snapshot PENDING. Nil/malformed/wrong-email/wrong-status menghasilkan safe 500 tanpa data parsial atau fallback GetUser. ID baru tidak dibandingkan dengan actor atau caller IDs; version tidak dipaksa 1. Tidak ada changed/top-level version/registration/login/session/token, profile ID, password/hash/dob/auth_version/effective permission pada respons. Salinan payload/status/country/metadata dan user/collections tidak berbagi mutable state antar request.
+
+Client memakai interface satu-method UserCreationService dan constructor additive NewWithUserCreationService sesudah seluruh guard NewWithUserProfileService. Constructor lama tetap menyediakan generated CreateUser SDK pada koneksi reusable yang sama. Wrapper mengelola nil context/request/response, bounded RequestContext dan deferred cleanup; tidak menambah koneksi per request atau memperluas Service.Register.
+
+Backend owns canonical email, duplicate account, ID/version, password hash/fingerprint, default member assignment, restriction flag, current authority sebelum replay, transaksi/locks/audit/outbox serta idempotency persistence. REST tidak menyimpan/menghash credential atau replay, retry otomatis, mengganti key maupun lookup setelah conflict. Retry caller menjalankan Me baru dan satu eligible CreateUser; snapshot replay boleh merupakan hasil tersimpan. Perubahan password/profil pada key sama dapat menghasilkan IC; duplicate-email EX dan IC/RB mengikuti mapper existing. Registry global tetap auth/common; encoded user public code/status dipertahankan dengan fallback aman terlokalisasi untuk Reason yang tidak diregistrasi, termasuk field errors, Retry-After dan 504/499.
+
+Sesudah create, caller dapat GET `/api/v1/users/23` dengan iam.user.read, PATCH `/api/v1/users/23/profile` dengan iam.user.update, atau PATCH `/api/v1/users/23/status` dengan iam.user.status.update. Masing-masing mengautentikasi dan memeriksa grant sendiri; create tidak otomatis mengaktifkan akun atau menjamin state/version untuk mutasi berikutnya. Default member dan must_change_password dari backend bersifat informasi, bukan grant bagi caller.
+
+POST collection serta OPTIONS dengan Access-Control-Request-Method POST memakai no-store sebelum CORS/auth, termasuk early error/replay. Allowed preflight tidak memanggil RPC; GET ListUsers dan preflight GET mempertahankan cache/role policy lama. Handler standalone juga no-store. Operasi bearer ini tidak memakai cookie fallback, BrowserPolicy, CSRF proof atau Origin wajib baru dan tidak pernah set/delete cookie atau menerbitkan token. CORS existing tetap memeriksa Origin bila dikirim; tidak ada env/CORS setting baru.
+
+Verifikasi HTTP fake SDK ada di root `./test/integration/users/...`; wire menggunakan UserService mock existing pada TLS1.3 bufconn di `./test/integration/authservice/...`, tanpa registrasi UserService kedua. Skenario menguji payload/PENDING/country presence, raw credential, metadata key tanpa Version, satu credential layanan, bearer asli, locale/request ID, deadline/cancellation, dependency/default-member/method/IAM denial, malformed snapshot dan constructor defaults. Barrier concurrency mencampur 36 caller create/replay/conflict, invalid input, Register/Login/ListUsers, self/target profile, detail/status/session pada satu koneksi; actor/credential/key/profile/generated result, precision, collections, field errors dan cookie diperiksa terpisah. Fakes tidak membuktikan transaksi/locking/replay persistence backend nyata, grant provisioning, frontend atau deployment. Smoke backend serta provisioning exact permission/method grant dan default-member readiness tetap pekerjaan rollout terpisah.
+
+```sh
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test ./test/integration/authservice/...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test ./...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test -race ./test/integration/... ./test/features/users/... ./test/features/auth/... ./test/client/authservice/... ./test/app/...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go build ./...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go vet ./...
+rtk proxy openspec validate add-admin-user-creation --strict
+```
+
+Hasil verifikasi create (2026-11-04): focused auth/password/users/client/app/integration **1.684 tes/41 package**, full suite **1.931 tes/96 package**, targeted race sesuai command di atas **1.684 tes/41 package**, seluruhnya lulus tanpa race report. Build, vet, strict OpenSpec, gofmt, serta tracked/untracked whitespace checks lulus. Audit hash membatasi edit ke 40 file dalam scope; 952 file baseline lainnya tetap, selain 13 artifact Graphify yang berubah melalui proses eksternal selama sesi dan dibiarkan apa adanya. Main specs/archive/dependency/env tidak diedit oleh implementasi ini.

@@ -16,6 +16,21 @@ import (
 
 func All() []testutils.Scenario {
 	return []testutils.Scenario{
+		{Name: "mixed creation replay conflict public profile detail status and sessions isolation", Run: creationWireConcurrent},
+		{Name: "creation TLS exact payload authority outcomes and default SDK", Run: creationWireOutcomes},
+		{Name: "creation bounded deadlines cancellation and ended contexts", Run: creationWireContext},
+		{Name: "concurrent target profile no-op self profile detail status sessions public and users", Run: targetProfileWireConcurrent},
+		{Name: "target profile generated SDK secure payload optional key and no-op", Run: targetProfileWireOutcomes},
+		{Name: "target profile bounded deadlines cancellation and ended contexts", Run: targetProfileWireContext},
+		{Name: "concurrent status detail sessions public auth and users stay isolated", Run: statusWireConcurrent},
+		{Name: "user status generated SDK secure payload and outcomes", Run: statusWireOutcomes},
+		{Name: "user status bounded deadlines cancellation and ended contexts", Run: statusWireContext},
+		{Name: "concurrent detail admin self public auth and users stay isolated", Run: detailWireConcurrent},
+		{Name: "user detail generated SDK exact payload secure context and failures", Run: detailWireOutcomes},
+		{Name: "user detail bounded deadlines cancellation and no dispatch on ended context", Run: detailWireContext},
+		{Name: "mixed concurrent admin self public auth and ListUsers stay isolated", Run: adminSessionsWireConcurrent},
+		{Name: "admin session generated SDK TLS metadata and outcomes", Run: adminSessionsWireOutcomes},
+		{Name: "admin session deadlines and cancellation", Run: adminSessionsWireContext},
 		{Name: "self-session HTTP wire uses exact SDK methods and authoritative outcomes", Run: mySessionsWireOutcomes},
 		{Name: "self-session wire deadlines cancellation and no retry", Run: mySessionsWireContext},
 		{Name: "concurrent self-session and Me isolate owners metadata and cookies", Run: mySessionsWireConcurrent},

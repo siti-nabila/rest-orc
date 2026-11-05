@@ -243,3 +243,55 @@ errors:
     code: GRPC016
     en: "execute UpdateProfile request: response must not be nil"
     id: "menjalankan request UpdateProfile: response tidak boleh nil"
+
+  user_detail_service_required:
+    code: GRPC020
+    en: "create auth gRPC client: user detail service must not be nil"
+    id: "membuat client gRPC auth: service detail user tidak boleh nil"
+  get_user_request_required:
+    code: GRPC021
+    en: "execute GetUser request: request must not be nil"
+    id: "menjalankan request GetUser: request tidak boleh nil"
+  get_user_response_required:
+    code: GRPC022
+    en: "execute GetUser request: response must not be nil"
+    id: "menjalankan request GetUser: response tidak boleh nil"
+
+  user_status_service_required:
+    code: GRPC023
+    en: "create auth gRPC client: user status service must not be nil"
+    id: "membuat client gRPC auth: service status user tidak boleh nil"
+  change_user_status_request_required:
+    code: GRPC024
+    en: "execute ChangeUserStatus request: request must not be nil"
+    id: "menjalankan request ChangeUserStatus: request tidak boleh nil"
+  change_user_status_response_required:
+    code: GRPC025
+    en: "execute ChangeUserStatus request: response must not be nil"
+    id: "menjalankan request ChangeUserStatus: response tidak boleh nil"
+
+  user_profile_service_required:
+    code: GRPC026
+    en: "create auth gRPC client: target user profile service must not be nil"
+    id: "membuat client gRPC auth: service profil user target tidak boleh nil"
+  update_user_request_required:
+    code: GRPC027
+    en: "execute UpdateUser request: request must not be nil"
+    id: "menjalankan request UpdateUser: request tidak boleh nil"
+  update_user_response_required:
+    code: GRPC028
+    en: "execute UpdateUser request: response must not be nil"
+    id: "menjalankan request UpdateUser: response tidak boleh nil"
+
+  user_creation_service_required:
+    code: GRPC029
+    en: "create auth gRPC client: user creation service must not be nil"
+    id: "membuat client gRPC auth: service pembuatan user tidak boleh nil"
+  create_user_request_required:
+    code: GRPC030
+    en: "execute CreateUser request: request must not be nil"
+    id: "menjalankan request CreateUser: request tidak boleh nil"
+  create_user_response_required:
+    code: GRPC031
+    en: "execute CreateUser request: response must not be nil"
+    id: "menjalankan request CreateUser: response tidak boleh nil"

@@ -239,7 +239,14 @@ func LifecycleNoStore(apiPrefix string) fiber.Handler {
 	return func(ctx fiber.Ctx) error {
 		path := strings.TrimRight(strings.ToLower(ctx.Path()), "/")
 		sessions := strings.ToLower(apiPrefix) + "/me/sessions"
-		if paths[path] || path == sessions || strings.HasPrefix(path, sessions+"/") {
+		target := strings.TrimPrefix(path, strings.ToLower(apiPrefix)+"/users/")
+		segments := strings.Split(target, "/")
+		adminSession := target != path && (len(segments) == 2 || len(segments) == 3) && segments[1] == "sessions"
+		userDetail := target != path && len(segments) == 1 && segments[0] != ""
+		userStatus := target != path && len(segments) == 2 && segments[1] == "status"
+		userProfile := target != path && len(segments) == 2 && segments[1] == "profile"
+		creation := path == strings.ToLower(apiPrefix)+"/users" && (ctx.Method() == fiber.MethodPost || ctx.Method() == fiber.MethodOptions && strings.EqualFold(ctx.Get(fiber.HeaderAccessControlRequestMethod), fiber.MethodPost))
+		if creation || paths[path] || path == sessions || strings.HasPrefix(path, sessions+"/") || adminSession || userDetail || userStatus || userProfile {
 			ctx.Set(fiber.HeaderCacheControl, "no-store")
 		}
 		return ctx.Next()

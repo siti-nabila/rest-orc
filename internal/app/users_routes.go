@@ -41,6 +41,21 @@ func registerUsersRoutes(
 	}
 
 	handler.RegisterAuthenticatedRoutes(meRoutes)
+	if err := registerAdminSessionRoutes(routes, authClient, responseWriter); err != nil {
+		return err
+	}
+	if err := registerUserDetailRoute(routes, authClient, responseWriter); err != nil {
+		return err
+	}
+	if err := registerUserStatusRoute(routes, authClient, responseWriter); err != nil {
+		return err
+	}
+	if err := registerUserProfileRoute(routes, authClient, responseWriter); err != nil {
+		return err
+	}
+	if err := registerUserCreationRoute(routes, authClient, responseWriter); err != nil {
+		return err
+	}
 	handler.RegisterAdminRoutes(routes.admin(usershandler.Route))
 	return nil
 }

@@ -20,3 +20,17 @@ func TestProfileClient(t *testing.T) { testutils.RunScenarios(t, test_scenarios.
 func TestSessionClient(t *testing.T) { testutils.RunScenarios(t, test_scenarios.SessionScenarios()) }
 
 func TestMySessions(t *testing.T) { testutils.RunScenarios(t, test_scenarios.MySessionsScenarios()) }
+
+func TestAdminSessions(t *testing.T) {
+	testutils.RunScenarios(t, test_scenarios.AdminSessionsScenarios())
+}
+
+func TestUserDetail(t *testing.T) { testutils.RunScenarios(t, test_scenarios.UserDetailScenarios()) }
+
+func TestUserStatus(t *testing.T) { testutils.RunScenarios(t, test_scenarios.UserStatusScenarios()) }
+
+func TestUserProfile(t *testing.T) { testutils.RunScenarios(t, test_scenarios.UserProfileScenarios()) }
+
+func TestUserCreation(t *testing.T) {
+	testutils.RunScenarios(t, test_scenarios.UserCreationScenarios())
+}

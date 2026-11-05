@@ -28,12 +28,17 @@ type Service interface {
 }
 
 type Client struct {
-	transport          *grpcclient.Client
-	service            Service
-	profileService     ProfileService
-	passwordService    PasswordService
-	sessionService     SessionService
-	selfSessionService SelfSessionService
+	transport           *grpcclient.Client
+	service             Service
+	profileService      ProfileService
+	passwordService     PasswordService
+	sessionService      SessionService
+	selfSessionService  SelfSessionService
+	adminSessionService AdminSessionService
+	userDetailService   UserDetailService
+	userStatusService   UserStatusService
+	userProfileService  UserProfileService
+	userCreationService UserCreationService
 }
 
 func New(transport *grpcclient.Client) (*Client, error) {

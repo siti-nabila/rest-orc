@@ -26,3 +26,18 @@ var (
 	ErrInvalidSessionPagination  = validationRegistry.MustNew("invalid_session_pagination")
 	ErrUnsupportedSessionControl = validationRegistry.MustNew("unsupported_session_control")
 )
+
+var (
+	ErrInvalidSessionUserID         = validationRegistry.MustNew("invalid_session_user_id")
+	ErrInvalidSessionIdempotencyKey = validationRegistry.MustNew("invalid_session_idempotency_key")
+	ErrInvalidSessionVersion        = validationRegistry.MustNew("invalid_session_version")
+)
+
+var ErrInvalidUserID = validationRegistry.MustNew("invalid_user_id")
+
+var (
+	ErrInvalidUserStatus             = validationRegistry.MustNew("invalid_user_status")
+	ErrInvalidStatusReasonCharacters = validationRegistry.MustNew("invalid_status_reason_characters")
+)
+
+var ErrInvalidInitialUserStatus = validationRegistry.MustNew("invalid_initial_user_status")

@@ -124,6 +124,79 @@ func NewApp(t *testing.T, authClient *authservice.Client, before ...fiber.Handle
 	}
 	myHandler.RegisterRoutes(meRoutes)
 	handler.RegisterAuthenticatedRoutes(meRoutes)
+	adminGateway, err := usersgateway.NewAdminSessions(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adminList, err := usersusecase.NewListUserSessions(adminGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adminRevoke, err := usersusecase.NewRevokeUserSession(adminGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adminAll, err := usersusecase.NewRevokeAllUserSessions(adminGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adminHandler, err := usershandler.NewAdminSessions(adminList, adminRevoke, adminAll, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adminHandler.RegisterRoutes(v1, authentication.Handle)
+	detailGateway, err := usersgateway.NewUserDetail(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	detail, err := usersusecase.NewGetUser(detailGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	detailHandler, err := usershandler.NewUserDetail(detail, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	detailHandler.RegisterRoutes(v1, authentication.Handle)
+	statusGateway, err := usersgateway.NewUserStatus(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	changeStatus, err := usersusecase.NewChangeUserStatus(statusGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	statusHandler, err := usershandler.NewUserStatus(changeStatus, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	statusHandler.RegisterRoutes(v1, authentication.Handle)
+	targetProfileGateway, err := usersgateway.NewUserProfile(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetProfile, err := usersusecase.NewUpdateUserProfile(targetProfileGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetProfileHandler, err := usershandler.NewUserProfile(targetProfile, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetProfileHandler.RegisterRoutes(v1, authentication.Handle)
+	creationGateway, err := usersgateway.NewUserCreation(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	creation, err := usersusecase.NewCreateUser(creationGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	creationHandler, err := usershandler.NewUserCreation(creation, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	creationHandler.RegisterRoutes(v1, authentication.Handle)
 	admin := v1.Group(
 		usershandler.Route,
 		authentication.Handle,

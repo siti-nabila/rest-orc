@@ -36,6 +36,15 @@ var (
 	ErrHTTPRequestRequired                = errorPack.New("http_request_required")
 	ErrHTTPRequestURLRequired             = errorPack.New("http_request_url_required")
 	ErrHTTPResponseBodyRequired           = errorPack.New("http_response_body_required")
+	ErrUserProfileServiceRequired         = errorPack.New("user_profile_service_required")
+	ErrUpdateUserRequestRequired          = errorPack.New("update_user_request_required")
+	ErrUpdateUserResponseRequired         = errorPack.New("update_user_response_required")
+	ErrUserStatusServiceRequired          = errorPack.New("user_status_service_required")
+	ErrChangeUserStatusRequestRequired    = errorPack.New("change_user_status_request_required")
+	ErrChangeUserStatusResponseRequired   = errorPack.New("change_user_status_response_required")
+	ErrUserDetailServiceRequired          = errorPack.New("user_detail_service_required")
+	ErrGetUserRequestRequired             = errorPack.New("get_user_request_required")
+	ErrGetUserResponseRequired            = errorPack.New("get_user_response_required")
 	ErrGRPCProfileServiceRequired         = errorPack.New("grpc_profile_service_required")
 	ErrGRPCProfileRequestRequired         = errorPack.New("grpc_profile_request_required")
 	ErrGRPCProfileResponseRequired        = errorPack.New("grpc_profile_response_required")
@@ -90,3 +99,9 @@ func mustLoadErrorDictionary(data []byte) errorpackage.DictionaryPack {
 	}
 	return dictionary
 }
+
+var (
+	ErrUserCreationServiceRequired = errorPack.New("user_creation_service_required")
+	ErrCreateUserRequestRequired   = errorPack.New("create_user_request_required")
+	ErrCreateUserResponseRequired  = errorPack.New("create_user_response_required")
+)

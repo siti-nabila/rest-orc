@@ -4,12 +4,13 @@ import (
 	"github.com/siti-nabila/rest-orc/test/app/fixtures"
 	"google.golang.org/grpc/connectivity"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
 func mySessionRoutes(t *testing.T) {
 	application := newApplication(t, fixtures.ValidConfig())
-	want := map[string]bool{"GET /api/v1/me/sessions": false, "DELETE /api/v1/me/sessions/:session_id": false, "POST /api/v1/me/sessions/revoke-all": false}
+	want := map[string]bool{"GET /api/v1/me/sessions": false, "DELETE /api/v1/me/sessions/:session_id": false, "POST /api/v1/me/sessions/revoke-all": false, "GET /api/v1/users/:user_id/sessions": false, "DELETE /api/v1/users/:user_id/sessions/:session_id": false, "POST /api/v1/users/:user_id/sessions/revoke-all": false}
 	for _, r := range application.HTTPServer.GetRoutes(true) {
 		key := r.Method + " " + r.Path
 		if _, ok := want[key]; ok {
@@ -34,16 +35,16 @@ func mySessionRoutes(t *testing.T) {
 		if res.StatusCode != tc.status {
 			t.Fatalf("%s %d", tc.path, res.StatusCode)
 		}
-		if tc.status == 401 && tc.path[:10] == "/api/v1/me" && res.Header.Get("Cache-Control") != "no-store" {
+		if tc.status == 401 && strings.HasPrefix(tc.path, "/api/v1/") && res.Header.Get("Cache-Control") != "no-store" {
 			t.Fatal("early missing no-store")
 		}
 	}
 	for _, r := range application.HTTPServer.GetRoutes(true) {
-		if r.Path == "/me/sessions" || r.Path == "/api/v1/users/me/sessions" || r.Path == "/api/v1/users/:user_id/sessions" {
+		if r.Path == "/me/sessions" || r.Path == "/api/v1/users/me/sessions" {
 			t.Fatal("alias registered")
 		}
 	}
-	for _, path := range []string{"/api/v1/me/sessions", "/api/v1/me/sessions/00000000-0000-0000-0000-000000000000", "/api/v1/me/sessions/revoke-all"} {
+	for _, path := range []string{"/api/v1/me/sessions", "/api/v1/me/sessions/00000000-0000-0000-0000-000000000000", "/api/v1/me/sessions/revoke-all", "/api/v1/users/bad/sessions", "/api/v1/users/23/sessions/bad", "/api/v1/users/23/sessions/revoke-all"} {
 		for _, origin := range []string{"https://app.example.test", "https://evil.example.test"} {
 			req := httptest.NewRequest("OPTIONS", path, nil)
 			req.Header.Set("Origin", origin)
