@@ -16,6 +16,18 @@ import (
 
 func All() []testutils.Scenario {
 	return []testutils.Scenario{
+		{Name: "application catalog mixed concurrent wire isolation", Run: applicationWireConcurrent},
+		{Name: "application catalog exact TLS wire default SDK and outcomes", Run: applicationWireOutcomes},
+		{Name: "application catalog bounded wire deadlines and cancellation", Run: applicationWireContext},
+		{Name: "mixed role catalog and existing user public session concurrent isolation", Run: roleWireConcurrent},
+		{Name: "assignment mixed concurrent wire isolation", Run: assignmentWireConcurrent},
+		{Name: "assignment exact wire TLS outcomes", Run: assignmentWireOutcomes},
+		{Name: "application access mixed concurrent isolation", Run: accessWireConcurrent},
+		{Name: "application access exact wire TLS outcomes", Run: accessWireOutcomes},
+		{Name: "application access bounded wire contexts", Run: accessWireContext},
+		{Name: "assignment bounded wire contexts", Run: assignmentWireContext},
+		{Name: "role catalog generated SDK exact wire TLS outcomes", Run: roleWireOutcomes},
+		{Name: "role reads bounded deadline cancellation ended contexts", Run: roleWireContext},
 		{Name: "mixed creation replay conflict public profile detail status and sessions isolation", Run: creationWireConcurrent},
 		{Name: "creation TLS exact payload authority outcomes and default SDK", Run: creationWireOutcomes},
 		{Name: "creation bounded deadlines cancellation and ended contexts", Run: creationWireContext},

@@ -21,6 +21,10 @@ const apiV1Prefix = "/api/v1"
 
 func All() []testutils.Scenario {
 	return []testutils.Scenario{
+		{Name: "application catalog production routes and early browser policy", Run: applicationCatalogRoutes},
+		{Name: "assignment production routes early browser failures and zero RPC", Run: userRoleRoutes},
+		{Name: "user application access routes and early browser policy", Run: userApplicationAccessRoutes},
+		{Name: "role catalog production route inventory cache and zero-RPC early errors", Run: roleCatalogRoutes},
 		{Name: "creation production route and method-specific cache", Run: userCreationRoutes},
 		{Name: "target profile production routes no-store and preflight", Run: userProfileRoutes},
 		{Name: "user detail production route early no-store and preflight", Run: userDetailRoutes},

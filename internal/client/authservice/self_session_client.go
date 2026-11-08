@@ -3,6 +3,8 @@ package authservice
 import (
 	"context"
 
+	applicationv1 "github.com/siti-nabila/api-contracts/pb/application/v1"
+	rolev1 "github.com/siti-nabila/api-contracts/pb/role/v1"
 	sessionv1 "github.com/siti-nabila/api-contracts/pb/session/v1"
 	userv1 "github.com/siti-nabila/api-contracts/pb/user/v1"
 	"github.com/siti-nabila/rest-orc/internal/client/grpcclient"
@@ -37,11 +39,16 @@ func NewWithSelfSessionService(transport *grpcclient.Client, service Service, pr
 	return &Client{
 		transport: transport, service: service, profileService: profile,
 		passwordService: password, sessionService: session, selfSessionService: self,
-		adminSessionService: sessionv1.NewSessionServiceClient(transport.Connection()),
-		userDetailService:   userv1.NewUserServiceClient(transport.Connection()),
-		userStatusService:   userv1.NewUserServiceClient(transport.Connection()),
-		userProfileService:  userv1.NewUserServiceClient(transport.Connection()),
-		userCreationService: userv1.NewUserServiceClient(transport.Connection()),
+		adminSessionService:          sessionv1.NewSessionServiceClient(transport.Connection()),
+		userDetailService:            userv1.NewUserServiceClient(transport.Connection()),
+		userStatusService:            userv1.NewUserServiceClient(transport.Connection()),
+		userProfileService:           userv1.NewUserServiceClient(transport.Connection()),
+		userCreationService:          userv1.NewUserServiceClient(transport.Connection()),
+		roleCatalogService:           rolev1.NewRoleServiceClient(transport.Connection()),
+		userRoleManagementService:    userv1.NewUserServiceClient(transport.Connection()),
+		applicationCatalogService:    applicationv1.NewApplicationServiceClient(transport.Connection()),
+		userApplicationAccessService: userv1.NewUserServiceClient(transport.Connection()),
+		applicationAccessService:     applicationv1.NewApplicationServiceClient(transport.Connection()),
 	}, nil
 }
 

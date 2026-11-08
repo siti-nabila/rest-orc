@@ -21,3 +21,9 @@ func TestUserProfile(t *testing.T) { testutils.RunScenarios(t, test_scenarios.Us
 func TestUserCreation(t *testing.T) {
 	testutils.RunScenarios(t, test_scenarios.UserCreationScenarios())
 }
+
+func TestUserRoles(t *testing.T) { testutils.RunScenarios(t, test_scenarios.UserRoleScenarios()) }
+
+func TestUserApplicationAccess(t *testing.T) {
+	testutils.RunScenarios(t, test_scenarios.UserApplicationAccessScenarios())
+}

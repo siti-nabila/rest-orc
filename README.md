@@ -1389,3 +1389,415 @@ rtk proxy openspec validate add-admin-user-creation --strict
 ```
 
 Hasil verifikasi create (2026-11-04): focused auth/password/users/client/app/integration **1.684 tes/41 package**, full suite **1.931 tes/96 package**, targeted race sesuai command di atas **1.684 tes/41 package**, seluruhnya lulus tanpa race report. Build, vet, strict OpenSpec, gofmt, serta tracked/untracked whitespace checks lulus. Audit hash membatasi edit ke 40 file dalam scope; 952 file baseline lainnya tetap, selain 13 artifact Graphify yang berubah melalui proses eksternal selama sesi dan dibiarkan apa adanya. Main specs/archive/dependency/env tidak diedit oleh implementasi ini.
+
+### Role catalog reads
+
+Role catalog memakai feature roles tersendiri dengan exact `iam.role.read=true` dari Me saat ini. Bearer unrestricted dengan grant ini boleh membaca tanpa role admin; role admin saja, wildcard/prefix, iam.user.read atau role-write grant tidak cukup. Nil context/zero actor ditolak 401 dan restriction/grant ditolak 403 sebelum validasi bisnis. Satu Me diikuti satu ListRoles (list/options) atau satu GetRole (detail), tanpa lookup/grant/mutasi tambahan. Backend tetap memeriksa authority saat read; katalog tidak memberi caller permission, assignment atau akses aplikasi.
+
+List/options menerima satu nilai masing-masing page, limit, keyword, application_code, statuses dan last_id. Defaults page=1/limit=20; page 1–2147483647, limit 1–100, ASCII decimal dengan leading zeros diperbolehkan. Explicit blank/sign/whitespace/overflow dan duplicate query ditolak. Application optional; bila hadir wajib `[a-z][a-z0-9_]*`, 1–50 byte, tanpa trim/lowercase. Status CSV nonempty ACTIVE/DISABLED; spasi biasa di sekitar token dibuang, lalu dedup/sort. Omitted status tidak memfilter ACTIVE saja, termasuk options. Keyword maksimal 200 byte asli/normalisasi, printable ASCII atau ASCII whitespace tab/LF/VT/FF/CR; karakter lain termasuk NUL/DEL/Unicode ditolak sebelum collapse whitespace. Blank keyword berarti tanpa search. Error field independen digabung aman dalam EN/ID/ZH tanpa echo input.
+
+Server menetapkan full safe field view, sort created_at DESC/updated_at DESC/id DESC dan search logical `keyword` dengan FULL_TEXT_TRIGRAM. Fields/sort/search/search_fields/search_mode/code serta created_from/created_to/updated_from/updated_to ditolak sebagai kontrol belum didukung, walau kosong. Query asing diabaikan tanpa authority. Last_id opaque maksimal 2048 byte sesudah URL decode satu kali; tidak di-trim/di-decode base64/dianggap ID. Reset cursor bila filter/keyword/sort berubah; backend memvalidasi query binding tanpa REST repair/refetch/retry. List/options memakai query sama sehingga cursor dapat dipakai silang dengan kontrol identik. Metadata tidak dihitung ulang dari jumlah item, page tidak di-clamp ke total_pages, dan total int64 dipertahankan pada DTO roles tanpa mengubah pagination users existing.
+
+RoleService SDK memakai interface dua read method dan constructor additive NewWithRoleCatalogService sesudah seluruh dependency guard existing. Semua constructor lama tetap menyediakan generated role SDK pada koneksi auth yang sama. Wrapper mengelola nil context/request/response, bounded RequestContext/deferred cleanup, dan mempertahankan dependency error identity. Gateway menyalin payload/query/metadata, menghapus inherited version/idempotency-key untuk read, mempertahankan bearer/locale/request ID dan fail-closed service credential policy. Tidak ada transport per request, dependency/env baru, Version/key precondition, atau forwarding header Version/key yang malformed/repeated.
+
+Sukses list memakai HTTP 200/code SS/message `Roles retrieved successfully.` dengan data tepat items/total/page/limit/total_pages/has_next/has_prev/next_cursor. Role memiliki tepat 13 field: id, code, name, description, application_id, application_code, status, is_system, version, role_code, created_at, updated_at, affected_user_count. ID/application ID numeric positif PostgreSQL-range; role_code int32 positif numeric berbeda dari ID/code; version int64 positif berupa string presisi. Description dan timestamps absent menjadi null eksplisit; timestamp valid menjadi UTC RFC3339Nano. Teks backend, urutan, false dan zero tetap, tidak dinormalisasi sebagai input baru. Affected_user_count berasal dari distinct users dengan assignment ACTIVE, termasuk bila account/role/app/app access sedang nonaktif; bukan jumlah online/effective access. Total int64 tetap JSON number tanpa konversi float/int32. Empty page tetap items=[] dengan total nonzero/cursor/backend flags bila demikian, bukan reset total atau metadata buatan.
+
+Detail memakai HTTP 200/code SS/message `Role retrieved successfully.` dengan data tepat role dan permissions. Role memakai 13 field yang sama; permissions berisi id/application_id/application_code/code/description, atau [] bila kosong. ID target hanya dari path (leading zeros diterima), bukan actor ID, body/query, role_code atau code. System/IAM dan DISABLED roles tetap dapat dibaca. Backend response nil/malformed/wrong-target, invalid ID/version/status/timestamp/page metadata atau permission lintas application gagal safe 500 tanpa partial data atau lookup tambahan. Nullable values dan collections disalin agar tidak berbagi mutable response antar request. Tidak ada credential/auth_version/user records, assignment, inherited/effective permission atau grant side effect pada hasil baca ini.
+
+Endpoint bearer role:
+
+```http
+GET /api/v1/roles?page=1&limit=20&application_code=clm&statuses=ACTIVE,DISABLED&keyword=legal
+Authorization: Bearer <access-token>
+```
+
+```http
+GET /api/v1/roles/00010
+Authorization: Bearer <access-token>
+```
+
+```http
+GET /api/v1/roles/options?application_code=clm&statuses=ACTIVE
+Authorization: Bearer <access-token>
+```
+
+Options memakai HTTP 200/code SS/message `Role options retrieved successfully.`. Data tetap delapan field pagination yang sama; hanya items dipetakan ke empat field. Contoh:
+
+```json
+{"code":"SS","message":"Role options retrieved successfully.","data":{"items":[{"value":"10","label":"clm.legal_reviewer - Reviewer legal kontrak","code":"clm.legal_reviewer","role_code":"3"}],"total":1,"page":1,"limit":20,"total_pages":1,"has_next":false,"has_prev":false,"next_cursor":""}}
+```
+
+Value adalah ID role string; role_code merupakan numeric code legacy sebagai string, bukan value atau immutable code. Description null/empty memakai name sebagai fallback label; nonempty whitespace/CR/LF/Unicode historis pada response tetap dipertahankan. Label display-only tidak dikirim sebagai identitas/grant. Route options didaftarkan sebelum detail, tanpa GetRole per item, label RPC, fetch seluruh halaman atau default ACTIVE-only. Grant/revoke nanti tetap memeriksa eligibility sendiri. Filter numeric role ListUsers existing tidak berubah.
+
+Role collection/options/detail dan malformed target memakai no-store sebelum CORS/auth serta pada handler standalone. Allowed GET preflight zero RPC; framework HEAD memakai protected read policy yang sama. Cookie-only tidak mengganti bearer, tidak ada mandatory Origin/CSRF baru, Set-Cookie/token atau inference login-required pada success/error. Existing CORS tetap memeriksa Origin bila dikirim. Semua public auth/user/session routes serta users GET/preflight/cache dan role gate legacy dipertahankan; tidak ada alias unversioned/mutasi role pada scope ini.
+
+Verifikasi HTTP fake SDK berada di `./test/integration/roles/...`; TLS bufconn memperluas harness existing dengan satu RoleService mock registration, tetap bersama User/Profile/Auth/Session pada satu connection. Combined command `GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test ./test/integration/authservice/... ./test/integration/roles/...` lulus 584 tes/6 package saat pengujian read dan context. Skenario mencakup exact payload sort/search/filter/cursor, query parity list/options, fresh Me dan current denial, field/locale errors, nil/malformed success, RNF/public encoded Reason, status/code/fallback/ceil Retry-After, 504/499, TLS1.3/service credential/bearer/locale/request ID dan deadline/cancellation/already-ended contexts tanpa retry. Registry global tetap auth/common; RNF mempertahankan 404/public code dengan fallback NotFound existing, sedangkan Reason lain mengikuti fallback mapper masing-masing. Fakes tidak membuktikan database full-text ranking, cursor binding/read snapshot backend nyata, provisioning exact IAM/method/user grant, frontend atau deployment; smoke/rollout tersebut tetap terpisah.
+
+Verifikasi role catalog (2026-11-05): focused roles/client/app/auth-handler/users/integration lulus **1.925 tes/43 package**, full suite **2.318 tes/110 package**, dan targeted race **1.925 tes/43 package** tanpa race report. Barrier terkontrol menguji 39 request list/options/detail role, invalid field/current denial/RNF/malformed permission, user creation, public Register/Login, user ListUsers/self/target profile/detail/status/session; filter/search/cursor, ID/code/role_code, nullability, version/total presisi, label, locale, error/cookie terpisah pada satu koneksi TLS. Build, vet dan strict OpenSpec lulus. Perintah verifikasi:
+
+```sh
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test ./test/features/roles/... ./test/client/authservice/... ./test/app/... ./test/features/auth/handler/... ./test/features/users/... ./test/integration/...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test ./...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test -race ./test/integration/... ./test/features/roles/... ./test/features/users/... ./test/features/auth/handler/... ./test/client/authservice/... ./test/app/...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go build ./...
+GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go vet ./...
+rtk proxy openspec validate add-role-catalog --strict
+```
+
+### User role management
+
+Assignment list: `GET /api/v1/users/{user_id}/roles` (`iam.user.read`). Commands:
+`POST /api/v1/users/{user_id}/roles/grant` (`iam.user.role.grant`) and
+`POST /api/v1/users/{user_id}/roles/revoke` (`iam.user.role.revoke`). Each exact
+permission is independent; neither read permission nor admin role substitutes for
+an operation's grant. Role options are a separate `iam.role.read` request.
+
+Commands require a JSON object with `role_ids` (1–20 decimal **strings**, values
+1–2147483647) and string `reason`. Send role option `value`, not its label, code or
+numeric role_code. Count is checked before normalization; duplicate numeric IDs
+(including `"10"` and `"00010"`) fail 400. Valid IDs are sent in ascending order.
+Reason allows printable ASCII plus CR/LF, is checked before trimming surrounding
+space/CR/LF, and must then be 3–500 bytes. Internal whitespace remains unchanged.
+Send exactly one `Version` header for the **target user**, positive decimal int64,
+and one nonblank printable ASCII `Idempotency-Key` of 1–200 bytes. Keys stay opaque;
+no generated key, body/query/actor-version fallback or automatic detail read occurs.
+
+The backend owns whole-batch atomicity, current authority, version/idempotency
+conflicts, audit and outbox. Grant requires an ACTIVE target, ACTIVE roles and
+applications, and ACTIVE target application access for non-IAM applications.
+REST does not automatically grant access or activate anything. Revoke follows
+backend self platform-admin/last-active-admin guards and does not impose grant
+prerequisites. Eligible repeated grants or absent/revoked assignment revokes can
+return `changed=false`; committed replay preserves its saved result/version.
+Every retry authenticates again and dispatches once; REST never retries, caches
+replays, replaces keys/versions, pre-reads state or invokes session changes.
+
+| Method | Route | Exact permission |
+| --- | --- | --- |
+| GET | `/api/v1/users/{user_id}/roles` | `iam.user.read` |
+| POST | `/api/v1/users/{user_id}/roles/grant` | `iam.user.role.grant` |
+| POST | `/api/v1/users/{user_id}/roles/revoke` | `iam.user.role.revoke` |
+
+List supports one value per query key: page (default 1, max 2147483647), limit
+(default 20, max 100), keyword (max 200 ASCII bytes, whitespace collapsed),
+application_code (canonical lowercase ASCII, max 50 bytes), statuses (CSV
+ACTIVE/REVOKED, default both) and last_id (opaque, max 2048 decoded bytes).
+Ordering is fixed id ASC; keyword searches role name through the backend's logical
+keyword document. Fields/sort/search controls, date ranges and exact code filters
+are unsupported. Duplicate supported keys fail; other unknown claims are ignored.
+URL-encode the cursor unchanged and reset it when target/filter/keyword changes.
+
+HTTP 200/code SS messages are `User roles retrieved successfully.`,
+`User roles granted successfully.` and `User roles revoked successfully.`.
+List data has exactly `items`, `total` (int64), `page`, `limit`, `total_pages`,
+`has_next`, `has_prev`, `next_cursor`, `user_id` (numeric) and `version` (exact
+positive int64 decimal string). Empty items remain [] even on an out-of-range page.
+Each item has exactly `id` (assignment ID), `role_id`, `code`, `role_code` (number),
+`name`, `status`, `role_status`, `application_id`, `application_code`,
+`application_status`, `is_system`, `application_access_status`, `granted_by`,
+`granted_at`, `revoked_by`, `revoked_at` and `revoke_reason`. IDs remain positive
+numeric PostgreSQL-range IDs. Access state, provenance actors/timestamps and revoke
+reason are explicit null when absent; present timestamps are UTC RFC3339 with
+fractional precision. Assignment status is ACTIVE/REVOKED; role/application
+status is ACTIVE/DISABLED. Historical text is unchanged. History is informational
+and does not promise effective permissions or grant eligibility; user detail's
+existing short role view is unchanged.
+
+Command data has exactly numeric `user_id`, numeric `changed_role_ids` ([] for
+no-op), string `version`, and boolean `changed` (including false). Changed IDs
+are the backend's ascending subset of the request. Result version is authoritative,
+including replay; do not assume input+1. Invalid backend successes fail safely
+without partial data. Read/list version can be used on a separately authorized
+command, but it may already be stale. On conflict, the caller decides how to
+refresh intent/version/key; REST does not refetch or resubmit automatically.
+
+```sh
+curl "$BASE_URL/api/v1/users/23/roles?application_code=clm&statuses=ACTIVE,REVOKED" \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+
+curl -X POST "$BASE_URL/api/v1/users/23/roles/grant" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -H 'Version: 9007199254740993' -H 'Idempotency-Key: assign-reviewer-23' \
+  -d '{"role_ids":["10","11"],"reason":"Penugasan reviewer"}'
+
+curl -X POST "$BASE_URL/api/v1/users/23/roles/revoke" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -H 'Version: 9007199254740993' -H 'Idempotency-Key: revoke-reviewer-23' \
+  -d '{"role_ids":["10"],"reason":"Penugasan selesai"}'
+```
+
+These bearer routes emit no-store on success and early errors/preflight, never
+issue/delete cookies or return tokens, and do not require new Origin/CSRF proof.
+Existing exact-origin CORS still applies to supplied Origin. Backend method/IAM
+and actor permission grants must already be configured; these endpoints do not
+provision them. No new environment keys, SDK upgrade or local state are needed.
+
+### Application catalog
+
+`GET /api/v1/applications` and `GET /api/v1/applications/options` require an
+unrestricted bearer actor with exact `iam.permission.read=true`. Admin role,
+role/user read or application grant/revoke permissions do not substitute for it.
+Each eligible request performs one Me followed by one ListApplications; application
+definitions and option selections do not grant access or assign roles.
+
+Both reads support one decoded value per query key: page (default 1, range
+1–2147483647), limit (default 20, range 1–100), keyword (max 200 ASCII bytes before
+and after whitespace normalization), statuses (CSV ACTIVE/DISABLED, ordinary spaces
+trimmed, sorted/deduplicated) and last_id (opaque, max 2048 decoded bytes). Leading
+zeros in page/limit are accepted. Omitted statuses includes both states, including
+system/IAM applications; request ACTIVE explicitly when needed. Keyword searches
+code/name through logical keyword/FULL_TEXT_TRIGRAM; ordering is fixed id DESC.
+Duplicate supported keys and fields/sort/search/search_fields/search_mode,
+application_code/code/date controls fail 400 even when empty; other unknown claims
+are ignored. Invalid independent fields accumulate safe EN/ID/ZH errors. URL-encode
+cursors unchanged and reset them when query filters/keyword change.
+
+List success is HTTP 200/code SS/message `Applications retrieved successfully.`.
+Data has exactly items/total/page/limit/total_pages/has_next/has_prev/next_cursor.
+Each item has exactly numeric positive PostgreSQL-range id, backend code/name,
+ACTIVE/DISABLED status and is_system (including false). Stored text/order remain
+unchanged; no description, version, timestamp, count, assignment/access state or
+permission mapping is invented. Total retains exact int64 precision; empty or
+out-of-range pages return items=[] with unchanged backend metadata. Nil/malformed
+successes fail safe 500 with empty error data and no partial rows or retries.
+
+Options success is HTTP 200/code SS/message `Application options retrieved
+successfully.` with the same eight page fields. Each option contains exactly
+value (the unchanged application.code, **not numeric id**) and label (`code - name`).
+Names/code, whitespace, punctuation and line breaks are preserved; an empty name
+still produces the literal `code - ` label. There is no description fallback.
+Options uses the same list query/page/cursor and never aggregates all pages or
+looks up labels/access/roles separately.
+
+| Method | Route | Exact permission |
+| --- | --- | --- |
+| GET | `/api/v1/applications` | `iam.permission.read` |
+| GET | `/api/v1/applications/options` | `iam.permission.read` |
+
+Both paths emit Cache-Control no-store on success, input errors, early CORS/auth/
+dependency failures and allowed GET preflight (zero RPCs). Bearer reads accept
+optional Origin with existing exact-origin CORS validation, never use cookies for
+authentication, and do not require new CSRF proof, issue/delete cookies or return tokens.
+Bodies (including malformed JSON) and unused/malformed/repeated Version or
+Idempotency-Key headers are ignored. Inherited mutation metadata is removed from
+a copy before business dispatch; existing public/user/role/assignment routes,
+legacy ListUsers cache policy and shared safe errors remain unchanged.
+
+```sh
+curl "$BASE_URL/api/v1/applications?statuses=ACTIVE&keyword=contract&page=1&limit=20" \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+
+curl "$BASE_URL/api/v1/applications/options?statuses=ACTIVE" \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+For example, list item `{"id":5,"code":"clm","name":"Contract Lifecycle Management","status":"ACTIVE","is_system":false}`
+becomes option `{"value":"clm","label":"clm - Contract Lifecycle Management"}`.
+Both retain the same backend page metadata; reset cursor after changing filters or
+keyword. Shared safe status/code/locale/structured-field/Retry-After mapping and
+504/499 context behavior remain unchanged, including generic localized fallback
+for unregistered downstream Reasons. No automatic retry or alternate identity.
+
+The configured service must already be allowed to call the exact ApplicationService
+method in the IAM namespace, and the actor must retain its current catalog read
+permission. These reads do not provision grants or application access, activate
+applications/users or promise grant eligibility. They reuse the verified TLS
+connection and one environment-owned credential, with bounded parent deadlines,
+locale and request ID. No SDK upgrade, new environment keys or local state are
+needed; integration tests use controlled fake/TLS services rather than Docker or
+a live backend.
+
+## User application access
+
+Application access is a users-owned relationship, independent of the application
+catalog and the short embedded access view in user detail. The history response
+has exactly `items,total,page,limit,total_pages,has_next,has_prev,next_cursor,user_id,version`.
+Each item has `application_id,application_code,name,application_status,is_system,status,granted_by,granted_at,revoked_by,revoked_at,revoke_reason`.
+`granted_at` is required UTC RFC3339 with fractional precision; the other provenance
+fields are nullable. Stored text/order are preserved; empty collections are `[]`
+and false flags remain explicit. IDs are numeric positive PostgreSQL INTEGER;
+total is nonnegative int64 and target entity version is a precise positive int64
+**string**, including values beyond 2^53. No never-granted catalog rows are synthesized.
+
+History accepts once-only `page,limit,last_id,keyword,application_code,statuses`.
+Defaults are page 1/limit 20; bounds are page 1–2147483647 and limit 1–100 without
+capping against totals. Statuses are ACTIVE/REVOKED CSV (spaces around tokens,
+deduplication/canonical order); they describe stored access, independently of
+ACTIVE/DISABLED application definitions. Application codes are exact lowercase
+ASCII `[a-z][a-z0-9_]*`, 1–50 bytes. Keyword is at most 200 raw/normalized ASCII
+bytes (printable plus whitespace), with whitespace collapsed. Access history uses
+explicit application_code/name **literal case-insensitive CONTAINS**; the current
+RPC does not support the logical FULL_TEXT_TRIGRAM used by application catalog
+and role-assignment search. Percent, underscore and backslash remain literal input;
+there is no rank or search-mode fallback. Ordering is fixed `application_id ASC`,
+with full projection. Opaque `last_id` is passed once-decoded unchanged, maximum
+2048 bytes; reset it after target/filter/keyword changes. Backend rejection is
+returned without repair, retry, page loops or catalog supplementation. Duplicate
+supported controls and fields/sort/search/search_fields/search_mode/date/code
+controls fail 400 even if empty; unrelated unknown claims are ignored.
+
+Grant takes required `role_ids` (1–20 string-decimal IDs, positive INTEGER range)
+and `reason`. Count is checked before normalization; numeric duplicates such as
+`"10"`/`"00010"` fail. IDs are copied and sorted. Revoke takes **reason only** and
+revokes access plus **every active role in that application**, including more
+than 20. Extra revoke `role_ids` of any JSON type are ignored and **cannot narrow
+revocation**. Use selected-user-role revoke for an explicit subset instead.
+Both access commands require exactly one `Version` (positive int64 ASCII decimal)
+and `Idempotency-Key` (opaque, nonblank printable ASCII, 1–200 bytes), without
+body/query/Me fallback or generated replacements. Reason allows printable ASCII
+and CR/LF, trims surrounding space/CR/LF to 3–500 bytes, and preserves internal
+bytes; tabs/non-ASCII/other controls fail. Unknown fields confer no authority.
+Compound result data has exactly `user_id,application_id,access_status,changed_role_ids,version,changed`.
+
+Access history uses the existing UserService SDK; compound access mutations use
+ApplicationService. Their small injectable SDK seams follow the existing
+constructor chain; all prior constructors retain generated SDK defaults on the
+same connection. Wrappers validate nil context/request/response, preserve error
+identity, and use the bounded request context with deferred cancellation. No new
+connection, dependency, service credential or runtime environment variable is needed.
+
+Gateway reads send full projection and `application_id ASC`, with nil search or
+`Search{fields:[application_code,name], mode:CONTAINS}`. Filters and metadata are
+copied; inherited version/key are removed, commands select exactly one key and
+send the expected target version only in payload. History may contain disabled
+system definitions or inactive-target records; required granted_at is checked,
+optional provenance remains null, and malformed successes fail entirely as safe
+500 without partial data or recovery RPCs. Caller-controlled list/detail target
+versions can be submitted on a separately authorized command; they promise no
+freshness and grant no command permission.
+
+Compound mapping preserves backend version and changed flag. `changed=true`
+with `changed_role_ids=[]` is valid for access-only changes; `changed=false`
+requires no changed roles. Grant returns ACTIVE and a subset of selected roles.
+Revoke returns REVOKED or explicit null (no stored access pair), and all actual
+changed roles without a 20-role output cap. Roles can be cleaned up even without
+an access row. IDs must be sorted/distinct/in range; malformed result metadata,
+state, target or version fails safe 500. Application ID is range-checked but the
+path code-to-ID resolution is backend-owned, without a catalog lookup. Nullable
+fields and collections are independently owned. No input+1 version arithmetic,
+partial repair, auto-retry, cookie or credential effect occurs.
+
+| Access endpoint | Exact grants after one Me | Business RPC |
+| --- | --- | --- |
+| GET `/api/v1/users/{user_id}/applications` | `iam.user.read` | UserService/ListUserApplicationAccess |
+| POST `/api/v1/users/{user_id}/applications/{application_code}/grant` | `iam.user.application.grant` AND `iam.user.role.grant` | ApplicationService/GrantApplicationAccess |
+| POST `/api/v1/users/{user_id}/applications/{application_code}/revoke` | `iam.user.application.revoke` AND `iam.user.role.revoke` | ApplicationService/RevokeApplicationAccess |
+
+Missing/invalid identity is 401; restricted or missing either exact grant is 403
+before business validation (transport syntax can fail earlier). Wildcards,
+prefixes, admin role, target=self or forged claims do not replace permission.
+Commands require no additional user/role/permission catalog read grant. Their
+permissions do not grant reads. Each eligible request performs one Me and the
+selected business RPC only; current backend authority can still deny after Me.
+
+Grant atomically creates/reactivates access and selected assignments, preserving
+unselected roles and active provenance. Backend alone checks ACTIVE target,
+ACTIVE nonsystem/non-IAM application and ACTIVE same-application roles. Revoke
+cleans all active application roles and access, including for backend-authorized
+inactive targets/disabled definitions, and does not rewrite old revoked history.
+Backend owns system protection, audit/outbox, whole-set atomicity, optimistic
+concurrency, no-op and retained replay. Every caller retry performs fresh Me and
+one command; REST has no eligibility pre-read, replay cache or automatic retry.
+Stale versions, changed retained payloads and busy-resource errors do not trigger
+replacement versions/keys, activation or alternate commands. Credentials,
+sessions and other applications are unaffected by REST orchestration.
+
+Example access requests (bearer authentication on each request):
+
+```http
+GET /api/v1/users/23/applications?page=1&limit=20&statuses=ACTIVE,REVOKED&keyword=clm
+Authorization: Bearer <access_token>
+```
+
+```http
+POST /api/v1/users/23/applications/clm/grant
+Authorization: Bearer <access_token>
+Content-Type: application/json
+Version: 9007199254740993
+Idempotency-Key: <action_key>
+
+{"role_ids":["10","11"],"reason":"Approved application access"}
+```
+
+```http
+POST /api/v1/users/23/applications/clm/revoke
+Authorization: Bearer <access_token>
+Content-Type: application/json
+Version: 9007199254740993
+Idempotency-Key: <action_key>
+
+{"reason":"Application access no longer required"}
+```
+
+List success is 200/SS/`User application access retrieved successfully.`:
+
+```json
+{"code":"SS","message":"User application access retrieved successfully.","data":{"items":[{"application_id":5,"application_code":"clm","name":"CLM","application_status":"ACTIVE","is_system":false,"status":"ACTIVE","granted_by":17,"granted_at":"2026-11-06T08:00:00.123456789Z","revoked_by":null,"revoked_at":null,"revoke_reason":null}],"total":1,"page":1,"limit":20,"total_pages":1,"has_next":false,"has_prev":false,"next_cursor":"","user_id":23,"version":"9007199254740993"}}
+```
+
+Compound success is 200/SS/`Application access granted successfully.` or
+`Application access revoked successfully.`. An access-only grant can return
+`{"user_id":23,"application_id":5,"access_status":"ACTIVE","changed_role_ids":[],"version":"9007199254740994","changed":true}`.
+A revoke cleaning roles without a stored access pair can return
+`{"user_id":23,"application_id":5,"access_status":null,"changed_role_ids":[10,11],"version":"9007199254740994","changed":true}`.
+A full no-op returns changed=false and [] without local version arithmetic.
+
+Only the three versioned access operations are added (standard HEAD follows
+GET); no self alias or alternate write method is introduced. Numeric path user
+IDs accept leading zeros; literal me is invalid. The independent access routes
+run before the broad legacy users admin group. Read ignores body and unused
+Version/key; commands select user/code from path and version/key only from their
+headers. Use a separately authorized target detail or history read for Version,
+not Me's actor version. Backend owns freshness and can reject a later command.
+
+All access responses are no-store, including early CORS/auth/input/backend
+failures and malformed targets/codes. Allowed exact-origin GET/POST preflight
+finishes with zero RPCs. Supplied Origin retains existing validation; no new
+mandatory Origin/CSRF proof is required. Cookies cannot authenticate these routes,
+and no result, self operation, no-op, replay or error sets/deletes cookies or
+returns credentials. Existing public/legacy users/catalog/assignment/profile/
+status/session routing and cache policies remain unchanged.
+
+### Application-access verification
+
+Focused `GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test
+./test/features/users/... ./test/client/authservice/... ./test/app/...
+./test/features/auth/handler/... ./test/integration/...` passed 2,866 tests across
+37 packages. This includes HTTP fake-SDK contracts, real SDK-encoded application
+AASP/HTTP409 and user/role failures, structured EN/ID/ZH fields, unknown-Reason
+localized fallback, ceil Retry-After and 499/504 handling without registry changes,
+private input echo or retries.
+
+`GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk proxy go test
+./test/integration/authservice/... -run
+'TestAuthServiceTransport/application_access'` passed the access TLS scenarios.
+The default generated SDK uses the exact UserService read/ApplicationService
+commands on one existing verified TLS1.3 connection, configured service token,
+original bearer, locale/request ID, copied metadata and bounded deadlines.
+Already-ended contexts do not dispatch; cancellation completes without a retry.
+The focused suite also passes a controlled 48-request mixed scenario covering
+access reads/grants/revokes, catalog, selected role grants, detail, login, status,
+profile, sessions, creation and legacy ListUsers, with isolated nullable data,
+large versions/totals, keys/reasons/roles/cursors, errors and cookie effects.
+
+These fakes and TLS bufconn verify REST orchestration and secure wire contracts;
+they do not establish live database literal-search/cursor snapshot behavior,
+compound transaction/audit/outbox persistence, retained replay or deployment.
+Before a separately authorized rollout, verify the existing configured identity
+has Me and the three exact access methods allowlisted, IAM scope, and the current
+actor's corresponding read or AND command grants. Application catalog permission
+remains independent. REST adds no persistence/config/dependency migration.
+Rollback removes the additive REST routes; it never compensates committed backend
+access/role changes automatically. Conflicts need caller-controlled resolution,
+not hidden version refresh/key generation or automatic resubmission.
+
+Final implementation checks (2026-11-06), all with `GOWORK=off
+GOCACHE=/tmp/rest-orc-go-cache`:
+
+- `rtk go test ./...`: 3,430 tests / 124 packages passed.
+- `rtk go test -race ./test/integration/... ./test/features/users/... ./test/features/auth/handler/... ./test/client/authservice/... ./test/app/...`: 2,866 tests / 37 packages passed, no race report.
+- `rtk go build ./...` and `rtk go vet ./...`: passed.
+- `openspec validate add-user-application-access --strict`, gofmt and scoped tracked/untracked whitespace checks: passed.
+- Scope review: 42 files (25 existing edits / 17 new); 1,260 other baseline files unchanged. Existing constructor signatures, three intended routes, one UserService/ApplicationService registration each, root test placement and unchanged dependencies/env/main specs/archive/Graphify verified. No live backend, Docker, sibling edits or deployment were used.

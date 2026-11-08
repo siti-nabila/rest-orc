@@ -56,6 +56,12 @@ func registerUsersRoutes(
 	if err := registerUserCreationRoute(routes, authClient, responseWriter); err != nil {
 		return err
 	}
+	if err := registerUserRoleRoutes(routes, authClient, responseWriter); err != nil {
+		return err
+	}
+	if err := registerUserApplicationAccessRoutes(routes, authClient, responseWriter); err != nil {
+		return err
+	}
 	handler.RegisterAdminRoutes(routes.admin(usershandler.Route))
 	return nil
 }
