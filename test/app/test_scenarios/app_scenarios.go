@@ -21,6 +21,14 @@ const apiV1Prefix = "/api/v1"
 
 func All() []testutils.Scenario {
 	return []testutils.Scenario{
+		{Name: "application catalog production routes and early browser policy", Run: applicationCatalogRoutes},
+		{Name: "assignment production routes early browser failures and zero RPC", Run: userRoleRoutes},
+		{Name: "user application access routes and early browser policy", Run: userApplicationAccessRoutes},
+		{Name: "role catalog production route inventory cache and zero-RPC early errors", Run: roleCatalogRoutes},
+		{Name: "creation production route and method-specific cache", Run: userCreationRoutes},
+		{Name: "target profile production routes no-store and preflight", Run: userProfileRoutes},
+		{Name: "user detail production route early no-store and preflight", Run: userDetailRoutes},
+		{Name: "user status production route and no-store", Run: userStatusRoutes},
 		{Name: "self-session production routes no-store and preflight", Run: mySessionRoutes},
 		{Name: "session routes and CORS reject locally without Me", Run: sessionRoutesAndCORS},
 		{Name: "password route is registered once without aliases or unauthenticated RPCs", Run: passwordRouteRegistration},
@@ -499,7 +507,7 @@ func profileRouteRegistration(t *testing.T) {
 			patchRoutes[route.Path] = true
 		}
 	}
-	if !patchRoutes["/api/v1/me/profile"] || len(patchRoutes) != 1 {
+	if !patchRoutes["/api/v1/me/profile"] || !patchRoutes["/api/v1/users/:user_id/status"] || !patchRoutes["/api/v1/users/:user_id/profile"] || len(patchRoutes) != 3 {
 		t.Fatalf("PATCH routes=%v", patchRoutes)
 	}
 	request, _ := http.NewRequest(http.MethodPatch, "/api/v1/me/profile", strings.NewReader(`{"name":"Jane"}`))

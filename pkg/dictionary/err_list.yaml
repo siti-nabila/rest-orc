@@ -243,3 +243,220 @@ errors:
     code: GRPC016
     en: "execute UpdateProfile request: response must not be nil"
     id: "menjalankan request UpdateProfile: response tidak boleh nil"
+
+  user_detail_service_required:
+    code: GRPC020
+    en: "create auth gRPC client: user detail service must not be nil"
+    id: "membuat client gRPC auth: service detail user tidak boleh nil"
+  get_user_request_required:
+    code: GRPC021
+    en: "execute GetUser request: request must not be nil"
+    id: "menjalankan request GetUser: request tidak boleh nil"
+  get_user_response_required:
+    code: GRPC022
+    en: "execute GetUser request: response must not be nil"
+    id: "menjalankan request GetUser: response tidak boleh nil"
+
+  user_status_service_required:
+    code: GRPC023
+    en: "create auth gRPC client: user status service must not be nil"
+    id: "membuat client gRPC auth: service status user tidak boleh nil"
+  change_user_status_request_required:
+    code: GRPC024
+    en: "execute ChangeUserStatus request: request must not be nil"
+    id: "menjalankan request ChangeUserStatus: request tidak boleh nil"
+  change_user_status_response_required:
+    code: GRPC025
+    en: "execute ChangeUserStatus request: response must not be nil"
+    id: "menjalankan request ChangeUserStatus: response tidak boleh nil"
+
+  user_profile_service_required:
+    code: GRPC026
+    en: "create auth gRPC client: target user profile service must not be nil"
+    id: "membuat client gRPC auth: service profil user target tidak boleh nil"
+  update_user_request_required:
+    code: GRPC027
+    en: "execute UpdateUser request: request must not be nil"
+    id: "menjalankan request UpdateUser: request tidak boleh nil"
+  update_user_response_required:
+    code: GRPC028
+    en: "execute UpdateUser request: response must not be nil"
+    id: "menjalankan request UpdateUser: response tidak boleh nil"
+
+  user_creation_service_required:
+    code: GRPC029
+    en: "create auth gRPC client: user creation service must not be nil"
+    id: "membuat client gRPC auth: service pembuatan user tidak boleh nil"
+  create_user_request_required:
+    code: GRPC030
+    en: "execute CreateUser request: request must not be nil"
+    id: "menjalankan request CreateUser: request tidak boleh nil"
+  create_user_response_required:
+    code: GRPC031
+    en: "execute CreateUser request: response must not be nil"
+    id: "menjalankan request CreateUser: response tidak boleh nil"
+
+  roles_usecase_gateway_required:
+    code: ROL001
+    en: "create roles usecase: gateway must not be nil"
+    id: "membuat usecase roles: gateway tidak boleh nil"
+
+  roles_gateway_client_required:
+    code: ROL002
+    en: "create roles gateway: client must not be nil"
+    id: "membuat gateway roles: client tidak boleh nil"
+
+  roles_gateway_context_required:
+    code: ROL003
+    en: "execute roles gateway: context must not be nil"
+    id: "menjalankan gateway roles: context tidak boleh nil"
+
+  roles_handler_usecase_required:
+    code: ROL004
+    en: "create roles handler: usecase must not be nil"
+    id: "membuat handler roles: usecase tidak boleh nil"
+
+  roles_handler_writer_required:
+    code: ROL005
+    en: "create roles handler: response writer must not be nil"
+    id: "membuat handler roles: response writer tidak boleh nil"
+
+  role_catalog_service_required:
+    code: GRPC032
+    en: "role catalog service must not be nil"
+    id: "role catalog service tidak boleh nil"
+
+  list_roles_request_required:
+    code: GRPC033
+    en: "ListRoles request must not be nil"
+    id: "ListRoles request tidak boleh nil"
+
+  list_roles_response_required:
+    code: GRPC034
+    en: "ListRoles response must not be nil"
+    id: "ListRoles response tidak boleh nil"
+
+  get_role_request_required:
+    code: GRPC035
+    en: "GetRole request must not be nil"
+    id: "GetRole request tidak boleh nil"
+
+  get_role_response_required:
+    code: GRPC036
+    en: "GetRole response must not be nil"
+    id: "GetRole response tidak boleh nil"
+
+  user_role_management_service_required:
+    code: GRPC037
+    en: "UserRoleManagementService must not be nil"
+    id: "UserRoleManagementService tidak boleh nil"
+
+  list_user_roles_request_required:
+    code: GRPC038
+    en: "ListUserRolesRequest must not be nil"
+    id: "ListUserRolesRequest tidak boleh nil"
+
+  list_user_roles_response_required:
+    code: GRPC039
+    en: "ListUserRolesResponse must not be nil"
+    id: "ListUserRolesResponse tidak boleh nil"
+
+  grant_user_roles_request_required:
+    code: GRPC040
+    en: "GrantUserRolesRequest must not be nil"
+    id: "GrantUserRolesRequest tidak boleh nil"
+
+  grant_user_roles_response_required:
+    code: GRPC041
+    en: "GrantUserRolesResponse must not be nil"
+    id: "GrantUserRolesResponse tidak boleh nil"
+
+  revoke_user_roles_request_required:
+    code: GRPC042
+    en: "RevokeUserRolesRequest must not be nil"
+    id: "RevokeUserRolesRequest tidak boleh nil"
+
+  revoke_user_roles_response_required:
+    code: GRPC043
+    en: "RevokeUserRolesResponse must not be nil"
+    id: "RevokeUserRolesResponse tidak boleh nil"
+
+  application_catalog_service_required:
+    code: GRPC044
+    en: "application catalog service must not be nil"
+    id: "service katalog aplikasi tidak boleh nil"
+
+  list_applications_request_required:
+    code: GRPC045
+    en: "ListApplications request must not be nil"
+    id: "request ListApplications tidak boleh nil"
+
+  list_applications_response_required:
+    code: GRPC046
+    en: "ListApplications response must not be nil"
+    id: "response ListApplications tidak boleh nil"
+
+  applications_usecase_gateway_required:
+    code: APC001
+    en: "create application usecase: gateway must not be nil"
+    id: "membuat usecase aplikasi: gateway tidak boleh nil"
+
+  applications_gateway_client_required:
+    code: APC002
+    en: "create application gateway: client must not be nil"
+    id: "membuat gateway aplikasi: client tidak boleh nil"
+
+  applications_gateway_context_required:
+    code: APC003
+    en: "execute application gateway: context must not be nil"
+    id: "menjalankan gateway aplikasi: context tidak boleh nil"
+
+  applications_handler_usecase_required:
+    code: APC004
+    en: "create application handler: usecase must not be nil"
+    id: "membuat handler aplikasi: usecase tidak boleh nil"
+
+  applications_handler_writer_required:
+    code: APC005
+    en: "create application handler: writer must not be nil"
+    id: "membuat handler aplikasi: writer tidak boleh nil"
+
+  user_application_access_service_required:
+    code: GRPC047
+    en: "user application access service must not be nil"
+    id: "user application access service tidak boleh nil"
+
+  application_access_service_required:
+    code: GRPC048
+    en: "application access service must not be nil"
+    id: "application access service tidak boleh nil"
+
+  list_user_application_access_request_required:
+    code: GRPC049
+    en: "ListUserApplicationAccessRequest must not be nil"
+    id: "ListUserApplicationAccessRequest tidak boleh nil"
+
+  list_user_application_access_response_required:
+    code: GRPC050
+    en: "ListUserApplicationAccessResponse must not be nil"
+    id: "ListUserApplicationAccessResponse tidak boleh nil"
+
+  grant_application_access_request_required:
+    code: GRPC051
+    en: "GrantApplicationAccessRequest must not be nil"
+    id: "GrantApplicationAccessRequest tidak boleh nil"
+
+  grant_application_access_response_required:
+    code: GRPC052
+    en: "GrantApplicationAccessResponse must not be nil"
+    id: "GrantApplicationAccessResponse tidak boleh nil"
+
+  revoke_application_access_request_required:
+    code: GRPC053
+    en: "RevokeApplicationAccessRequest must not be nil"
+    id: "RevokeApplicationAccessRequest tidak boleh nil"
+
+  revoke_application_access_response_required:
+    code: GRPC054
+    en: "RevokeApplicationAccessResponse must not be nil"
+    id: "RevokeApplicationAccessResponse tidak boleh nil"

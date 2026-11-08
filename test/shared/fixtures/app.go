@@ -7,9 +7,15 @@ import (
 	"github.com/gofiber/fiber/v3"
 	requestauth "github.com/siti-nabila/rest-orc/internal/auth"
 	"github.com/siti-nabila/rest-orc/internal/client/authservice"
+	applicationsgateway "github.com/siti-nabila/rest-orc/internal/features/applications/gateway/authservice"
+	applicationshandler "github.com/siti-nabila/rest-orc/internal/features/applications/handler"
+	applicationsusecase "github.com/siti-nabila/rest-orc/internal/features/applications/usecase"
 	authgateway "github.com/siti-nabila/rest-orc/internal/features/auth/gateway/authservice"
 	authhandler "github.com/siti-nabila/rest-orc/internal/features/auth/handler"
 	authusecase "github.com/siti-nabila/rest-orc/internal/features/auth/usecase"
+	rolesgateway "github.com/siti-nabila/rest-orc/internal/features/roles/gateway/authservice"
+	roleshandler "github.com/siti-nabila/rest-orc/internal/features/roles/handler"
+	rolesusecase "github.com/siti-nabila/rest-orc/internal/features/roles/usecase"
 	usersgateway "github.com/siti-nabila/rest-orc/internal/features/users/gateway/authservice"
 	usershandler "github.com/siti-nabila/rest-orc/internal/features/users/handler"
 	usersusecase "github.com/siti-nabila/rest-orc/internal/features/users/usecase"
@@ -124,12 +130,158 @@ func NewApp(t *testing.T, authClient *authservice.Client, before ...fiber.Handle
 	}
 	myHandler.RegisterRoutes(meRoutes)
 	handler.RegisterAuthenticatedRoutes(meRoutes)
+	adminGateway, err := usersgateway.NewAdminSessions(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adminList, err := usersusecase.NewListUserSessions(adminGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adminRevoke, err := usersusecase.NewRevokeUserSession(adminGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adminAll, err := usersusecase.NewRevokeAllUserSessions(adminGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adminHandler, err := usershandler.NewAdminSessions(adminList, adminRevoke, adminAll, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adminHandler.RegisterRoutes(v1, authentication.Handle)
+	detailGateway, err := usersgateway.NewUserDetail(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	detail, err := usersusecase.NewGetUser(detailGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	detailHandler, err := usershandler.NewUserDetail(detail, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	detailHandler.RegisterRoutes(v1, authentication.Handle)
+	statusGateway, err := usersgateway.NewUserStatus(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	changeStatus, err := usersusecase.NewChangeUserStatus(statusGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	statusHandler, err := usershandler.NewUserStatus(changeStatus, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	statusHandler.RegisterRoutes(v1, authentication.Handle)
+	targetProfileGateway, err := usersgateway.NewUserProfile(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetProfile, err := usersusecase.NewUpdateUserProfile(targetProfileGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetProfileHandler, err := usershandler.NewUserProfile(targetProfile, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetProfileHandler.RegisterRoutes(v1, authentication.Handle)
+	creationGateway, err := usersgateway.NewUserCreation(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	creation, err := usersusecase.NewCreateUser(creationGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	creationHandler, err := usershandler.NewUserCreation(creation, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	creationHandler.RegisterRoutes(v1, authentication.Handle)
+
+	userRoleGateway, err := usersgateway.NewUserRoleManagement(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userRoleList, err := usersusecase.NewListUserRoles(userRoleGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userRoleGrant, err := usersusecase.NewGrantUserRoles(userRoleGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userRoleRevoke, err := usersusecase.NewRevokeUserRoles(userRoleGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userRoleHandler, err := usershandler.NewUserRoleManagement(userRoleList, userRoleGrant, userRoleRevoke, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userRoleHandler.RegisterRoutes(v1, authentication.Handle)
+	userApplicationAccessGateway, err := usersgateway.NewUserApplicationAccess(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userApplicationAccessList, err := usersusecase.NewListUserApplicationAccess(userApplicationAccessGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userApplicationAccessGrant, err := usersusecase.NewGrantApplicationAccess(userApplicationAccessGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userApplicationAccessRevoke, err := usersusecase.NewRevokeApplicationAccess(userApplicationAccessGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userApplicationAccessHandler, err := usershandler.NewUserApplicationAccess(userApplicationAccessList, userApplicationAccessGrant, userApplicationAccessRevoke, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userApplicationAccessHandler.RegisterRoutes(v1, authentication.Handle)
 	admin := v1.Group(
 		usershandler.Route,
 		authentication.Handle,
 		authorization.RequireRole(requestauth.RoleAdmin),
 	)
 	handler.RegisterAdminRoutes(admin)
+	roleGateway, err := rolesgateway.New(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	roleList, err := rolesusecase.NewList(roleGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	roleGet, err := rolesusecase.NewGet(roleGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	roleHandler, err := roleshandler.New(roleList, roleGet, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	roleHandler.RegisterRoutes(v1, authentication.Handle)
+	applicationGateway, err := applicationsgateway.New(authClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+	applicationList, err := applicationsusecase.NewList(applicationGateway)
+	if err != nil {
+		t.Fatal(err)
+	}
+	applicationHandler, err := applicationshandler.New(applicationList, writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	applicationHandler.RegisterRoutes(v1, authentication.Handle)
 	return app
 }
 

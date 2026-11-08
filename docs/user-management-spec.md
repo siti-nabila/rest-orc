@@ -378,8 +378,8 @@ Endpoint `/me/sessions/revoke` tidak boleh mencabut session user lain meskipun I
 | GET `/users` | ListUsers | iam.user.read |
 | POST `/users` | CreateUser | iam.user.create |
 | GET `/users/{user_id}` | GetUser | iam.user.read |
-| PATCH `/users/{user_id}` | UpdateUser | iam.user.update |
-| POST `/users/{user_id}/status` | ChangeUserStatus | iam.user.status.update |
+| PATCH `/users/{user_id}/profile` | UpdateUser | iam.user.update |
+| PATCH `/users/{user_id}/status` | ChangeUserStatus | iam.user.status.update |
 | GET `/users/{user_id}/roles` | ListUserRoles | iam.user.read |
 | POST `/users/{user_id}/roles/grant` | GrantUserRoles | iam.user.role.grant |
 | POST `/users/{user_id}/roles/revoke` | RevokeUserRoles | iam.user.role.revoke |

@@ -36,6 +36,15 @@ var (
 	ErrHTTPRequestRequired                = errorPack.New("http_request_required")
 	ErrHTTPRequestURLRequired             = errorPack.New("http_request_url_required")
 	ErrHTTPResponseBodyRequired           = errorPack.New("http_response_body_required")
+	ErrUserProfileServiceRequired         = errorPack.New("user_profile_service_required")
+	ErrUpdateUserRequestRequired          = errorPack.New("update_user_request_required")
+	ErrUpdateUserResponseRequired         = errorPack.New("update_user_response_required")
+	ErrUserStatusServiceRequired          = errorPack.New("user_status_service_required")
+	ErrChangeUserStatusRequestRequired    = errorPack.New("change_user_status_request_required")
+	ErrChangeUserStatusResponseRequired   = errorPack.New("change_user_status_response_required")
+	ErrUserDetailServiceRequired          = errorPack.New("user_detail_service_required")
+	ErrGetUserRequestRequired             = errorPack.New("get_user_request_required")
+	ErrGetUserResponseRequired            = errorPack.New("get_user_response_required")
 	ErrGRPCProfileServiceRequired         = errorPack.New("grpc_profile_service_required")
 	ErrGRPCProfileRequestRequired         = errorPack.New("grpc_profile_request_required")
 	ErrGRPCProfileResponseRequired        = errorPack.New("grpc_profile_response_required")
@@ -90,3 +99,57 @@ func mustLoadErrorDictionary(data []byte) errorpackage.DictionaryPack {
 	}
 	return dictionary
 }
+
+var (
+	ErrUserCreationServiceRequired = errorPack.New("user_creation_service_required")
+	ErrCreateUserRequestRequired   = errorPack.New("create_user_request_required")
+	ErrCreateUserResponseRequired  = errorPack.New("create_user_response_required")
+)
+
+var (
+	ErrRolesUseCaseGatewayRequired = errorPack.New("roles_usecase_gateway_required")
+	ErrRolesGatewayClientRequired  = errorPack.New("roles_gateway_client_required")
+	ErrRolesGatewayContextRequired = errorPack.New("roles_gateway_context_required")
+	ErrRolesHandlerUseCaseRequired = errorPack.New("roles_handler_usecase_required")
+	ErrRolesHandlerWriterRequired  = errorPack.New("roles_handler_writer_required")
+)
+
+var (
+	ErrRoleCatalogServiceRequired = errorPack.New("role_catalog_service_required")
+	ErrListRolesRequestRequired   = errorPack.New("list_roles_request_required")
+	ErrListRolesResponseRequired  = errorPack.New("list_roles_response_required")
+	ErrGetRoleRequestRequired     = errorPack.New("get_role_request_required")
+	ErrGetRoleResponseRequired    = errorPack.New("get_role_response_required")
+)
+
+var (
+	ErrUserRoleManagementServiceRequired = errorPack.New("user_role_management_service_required")
+	ErrListUserRolesRequestRequired      = errorPack.New("list_user_roles_request_required")
+	ErrListUserRolesResponseRequired     = errorPack.New("list_user_roles_response_required")
+	ErrGrantUserRolesRequestRequired     = errorPack.New("grant_user_roles_request_required")
+	ErrGrantUserRolesResponseRequired    = errorPack.New("grant_user_roles_response_required")
+	ErrRevokeUserRolesRequestRequired    = errorPack.New("revoke_user_roles_request_required")
+	ErrRevokeUserRolesResponseRequired   = errorPack.New("revoke_user_roles_response_required")
+)
+
+var (
+	ErrApplicationCatalogServiceRequired  = errorPack.New("application_catalog_service_required")
+	ErrListApplicationsRequestRequired    = errorPack.New("list_applications_request_required")
+	ErrListApplicationsResponseRequired   = errorPack.New("list_applications_response_required")
+	ErrApplicationsUseCaseGatewayRequired = errorPack.New("applications_usecase_gateway_required")
+	ErrApplicationsGatewayClientRequired  = errorPack.New("applications_gateway_client_required")
+	ErrApplicationsGatewayContextRequired = errorPack.New("applications_gateway_context_required")
+	ErrApplicationsHandlerUseCaseRequired = errorPack.New("applications_handler_usecase_required")
+	ErrApplicationsHandlerWriterRequired  = errorPack.New("applications_handler_writer_required")
+)
+
+var (
+	ErrUserApplicationAccessServiceRequired      = errorPack.New("user_application_access_service_required")
+	ErrApplicationAccessServiceRequired          = errorPack.New("application_access_service_required")
+	ErrListUserApplicationAccessRequestRequired  = errorPack.New("list_user_application_access_request_required")
+	ErrListUserApplicationAccessResponseRequired = errorPack.New("list_user_application_access_response_required")
+	ErrGrantApplicationAccessRequestRequired     = errorPack.New("grant_application_access_request_required")
+	ErrGrantApplicationAccessResponseRequired    = errorPack.New("grant_application_access_response_required")
+	ErrRevokeApplicationAccessRequestRequired    = errorPack.New("revoke_application_access_request_required")
+	ErrRevokeApplicationAccessResponseRequired   = errorPack.New("revoke_application_access_response_required")
+)

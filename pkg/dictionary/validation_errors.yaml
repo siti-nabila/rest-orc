@@ -1,4 +1,20 @@
 errors:
+  unsupported_access_control:
+    en: this user application access control is not supported
+    id: kontrol akses aplikasi user ini tidak didukung
+    zh: 不支持此用户应用访问参数
+  invalid_initial_user_status:
+    en: must be PENDING when creating a user
+    id: harus PENDING saat membuat user
+    zh: 创建用户时必须为 PENDING
+  invalid_user_status:
+    en: must be PENDING, ACTIVE, SUSPENDED or DEACTIVATED
+    id: harus PENDING, ACTIVE, SUSPENDED atau DEACTIVATED
+    zh: 必须为 PENDING、ACTIVE、SUSPENDED 或 DEACTIVATED
+  invalid_status_reason_characters:
+    en: must contain only printable ASCII and CR or LF
+    id: hanya boleh berisi ASCII tercetak serta CR atau LF
+    zh: 只能包含可打印 ASCII 及回车或换行
   password_must_differ:
     en: must differ from the current password
     id: harus berbeda dari password saat ini
@@ -31,3 +47,87 @@ errors:
     en: this session list control is not supported
     id: kontrol daftar sesi ini tidak didukung
     zh: 不支持此会话列表参数
+  invalid_session_user_id:
+    en: must be a decimal user ID between 1 and 2147483647
+    id: harus berupa ID user desimal antara 1 dan 2147483647
+    zh: 必须为 1 至 2147483647 之间的十进制用户标识
+  invalid_session_idempotency_key:
+    en: requires exactly one nonblank printable ASCII key of 1 to 200 bytes
+    id: wajib satu key ASCII tercetak yang tidak kosong sepanjang 1 sampai 200 byte
+    zh: 需要一个非空的 1 至 200 字节可打印 ASCII 键
+  invalid_session_version:
+    en: requires exactly one decimal version between 1 and 9223372036854775807
+    id: wajib satu versi desimal antara 1 dan 9223372036854775807
+    zh: 需要一个 1 至 9223372036854775807 之间的十进制版本
+  invalid_user_id:
+    en: must be a decimal user ID between 1 and 2147483647
+    id: harus berupa ID user desimal antara 1 dan 2147483647
+    zh: 必须为 1 至 2147483647 之间的十进制用户标识
+  invalid_role_id:
+    en: must be a decimal role ID between 1 and 2147483647
+    id: harus berupa ID role desimal antara 1 dan 2147483647
+    zh: 必须为 1 至 2147483647 之间的十进制角色标识
+  invalid_role_pagination:
+    en: must be a positive decimal within the page or limit range
+    id: harus desimal positif dalam rentang page atau limit
+    zh: 必须为页码或每页数量范围内的正十进制数
+  repeated_role_query:
+    en: requires exactly one query value
+    id: wajib tepat satu nilai query
+    zh: 查询参数只能有一个值
+  invalid_role_application:
+    en: must be a lowercase application code of 1 to 50 bytes
+    id: harus kode aplikasi huruf kecil sepanjang 1 sampai 50 byte
+    zh: 必须为 1 至 50 字节的小写应用代码
+  invalid_role_statuses:
+    en: must be a nonempty CSV of ACTIVE or DISABLED
+    id: harus CSV tidak kosong berisi ACTIVE atau DISABLED
+    zh: 必须为非空的 ACTIVE 或 DISABLED 逗号分隔列表
+  invalid_role_keyword:
+    en: must be ASCII text or whitespace of at most 200 bytes
+    id: harus teks atau whitespace ASCII maksimal 200 byte
+    zh: 必须为不超过 200 字节的 ASCII 文本或空白字符
+  invalid_role_cursor:
+    en: must be at most 2048 bytes
+    id: maksimal 2048 byte
+    zh: 最多为 2048 字节
+  unsupported_role_control:
+    en: this role catalog control is not supported
+    id: kontrol katalog role ini tidak didukung
+    zh: 不支持此角色目录参数
+  invalid_assignment_role_ids:
+    en: requires 1 to 20 distinct decimal role IDs between 1 and 2147483647
+    id: wajib 1 sampai 20 ID role desimal berbeda antara 1 dan 2147483647
+    zh: 需要 1 至 20 个不同的十进制角色标识，范围为 1 至 2147483647
+  invalid_assignment_statuses:
+    en: must be a nonempty CSV of ACTIVE or REVOKED
+    id: harus CSV tidak kosong berisi ACTIVE atau REVOKED
+    zh: 必须为非空的 ACTIVE 或 REVOKED 逗号分隔列表
+  unsupported_assignment_control:
+    en: this user role list control is not supported
+    id: kontrol daftar role user ini tidak didukung
+    zh: 不支持此用户角色列表参数
+  invalid_application_pagination:
+    en: must be a positive decimal within the page or limit range
+    id: harus desimal positif dalam rentang page atau limit
+    zh: 必须为页码或每页数量范围内的正十进制数
+  repeated_application_query:
+    en: requires exactly one query value
+    id: wajib tepat satu nilai query
+    zh: 查询参数只能有一个值
+  invalid_application_statuses:
+    en: must be a nonempty CSV of ACTIVE or DISABLED
+    id: harus CSV tidak kosong berisi ACTIVE atau DISABLED
+    zh: 必须为非空的 ACTIVE 或 DISABLED 逗号分隔列表
+  invalid_application_keyword:
+    en: must be ASCII text or whitespace of at most 200 bytes
+    id: harus teks atau whitespace ASCII maksimal 200 byte
+    zh: 必须为不超过 200 字节的 ASCII 文本或空白字符
+  invalid_application_cursor:
+    en: must be at most 2048 bytes
+    id: maksimal 2048 byte
+    zh: 最多为 2048 字节
+  unsupported_application_control:
+    en: this application catalog control is not supported
+    id: kontrol katalog aplikasi ini tidak didukung
+    zh: 不支持此应用目录参数

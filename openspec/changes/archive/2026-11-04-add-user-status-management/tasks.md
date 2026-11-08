@@ -1,0 +1,37 @@
+# Tasks
+
+## 1. Users domain and usecase
+
+- [x] 1.1 Add users-owned status actor/body/request/result DTOs and a small consumer-owned gateway interface. Reuse matching target/key/version rules without changing existing validator identities; support PostgreSQL target bounds, positive int64 target version and exact-one parsed header values. Verify root domain tests cover missing/duplicate/case-varied headers, numeric boundaries/leading zeros, opaque printable keys and invalid alternate sources; document the input table in README.
+- [x] 1.2 Implement copied-request NormalizeAndValidate with required status/reason presence, four exact status codes, raw printable ASCII plus CR/LF checking before trim, normalized reason length 3–500 bytes and localized independent body errors. Verify root tests cover null/missing fields, raw edge controls/Unicode, tab rejection, preserved internal CR/LF, 2/3/500/501-byte bounds, both-field failures and caller pointer isolation; document normalization and validation examples.
+- [x] 1.3 Implement the focused status usecase with nil-context/zero-actor guards, restricted-actor denial and exact iam.user.status.update before business validation/dispatch. Delegate transitions, self/last-admin policy, no-op, replay and revocation to one gateway call without target reads or local version arithmetic. Verify root usecase scenarios prove zero/one calls, actor/target/version separation, permission independence, PENDING no-op dispatch and error identity with no partial result; document the permission and backend-policy boundary.
+
+## 2. Shared SDK client and users gateway
+
+- [x] 2.1 Add one-method UserStatusService, a guarded ChangeUserStatus wrapper in existing user_client.go, a default SDK on the reusable connection and additive NewWithUserStatusService through NewWithUserDetailService. Preserve old interfaces/constructors and nil-guard ordering. Verify root client scenarios cover all nil dependencies/context/request/response, inherited deadline/cancellation, cleanup and old-constructor compatibility; document the injection contract beside the constructor.
+- [x] 2.2 Add users gateway change_status.go with copied optional status/version values, normalized reason, copied outgoing metadata, inherited version/key removal and exactly one selected idempotency-key. Validate target-matching successful IDs, allowed status and positive int64 versions, returning exact decimal version and explicit changed=false without growth assumptions. Verify root gateway scenarios cover pointer/metadata isolation, payload presence, precision, saved replay/no-op, malformed successes, unchanged error identity and no extra RPC; document the exact four-field success envelope in README.
+
+## 3. HTTP handler and route composition
+
+- [x] 3.1 Add a dedicated UserStatusHandler directly under users/handler with JSON-object-only decoding, pointer field presence, path-only target and selected headers. Register only PATCH /api/v1/users/:user_id/status with per-route authentication before the broad legacy users admin group in production and shared fixtures. Verify root handler/app tests cover body typing/presence, malformed paths, duplicate headers, forged source claims, one Me, exact permission without role gate, and existing routes/invalid aliases. Document the PATCH request and reconcile only the older status POST reference in docs/user-management-spec.md.
+- [x] 3.2 Extend LifecycleNoStore before CORS/auth for the status path, including malformed IDs and OPTIONS, and set no-store for standalone handler use without BrowserPolicy injection. Verify root HTTP tests cover early CORS/auth/validation/dependency errors, allowed zero-RPC preflight, cookie-only rejection and absence of Set-Cookie/tokens on success/error/self/no-op/replay/activation; document cache and browser behavior alongside the endpoint.
+
+## 4. Integration and concurrent behavior
+
+- [x] 4.1 Add fake-SDK HTTP scenarios proving Me→ChangeUserStatus, distinct actor/target/version, normalized payload presence, exact output precision/false, malformed-success rejection and fresh authority on repeated keys. Use SDK-encoded user errors VC/IC/IST/RB/SIF/LAR plus auth/not-found/rate/unavailable/unknown failures to verify existing status/code/field/localization/Retry-After behavior without expanding global registries. Exercise independent Me→GetUser then Me→ChangeUserStatus permissions and stale-conflict handling with no refetch/retry. Verify the integration runner passes; document the non-atomic example and limits of fake backend-policy/replay coverage.
+- [x] 4.2 Extend the existing generated UserService fake in the TLS bufconn scenarios rather than registering a second service. Verify exact ChangeUserStatus method, optional status/version presence, selected key, original bearer, locale/request ID, one env-owned credential, TLS connection reuse, IAM method denial and bounded deadline/cancellation through the existing runner; document the wire verification command and that real backend transaction/rollout checks are separate.
+- [x] 4.3 Add controlled mixed concurrent status/detail/session/public/ListUsers scenarios with distinct actors, targets, reasons, keys, versions, permissions, contexts and outcomes. Verify request/result/metadata/cookie isolation, existing call order and zero duplicate Me under the focused race runner; record its command and result with the integration verification notes.
+
+## 5. Cross-layer verification
+
+- [x] 5.1 Format changed Go files and run focused runners, the targeted race checks, GOWORK=off build/full tests/vet and strict validation of add-user-status-management using the repository's existing tooling/cache conventions. Verify README requests and result examples match the implemented route/headers/body/envelope, and record the actual commands/results without claiming real backend transaction or deployment validation.
+- [x] 5.2 Review the complete scoped diff and run whitespace checks. Verify tests remain under root test/, only the additive PATCH capability is introduced, old contracts/constructor signatures/mapper behavior remain intact, and unrelated working-tree files, main specs, archives, generated Graphify files, dependencies, environment, sibling repositories and Git state are preserved. Mark tasks complete only with their stated evidence.
+
+## Verification evidence (2026-11-04)
+
+- Full suite: `GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test ./...` — 1551 passed, 95 packages.
+- Race suite: `GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test -race ./test/integration/authservice/... ./test/integration/users/... ./test/client/authservice/... ./test/features/users/... ./test/app/...` — 898 passed, 28 packages, no race reports.
+- Build/vet: `GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go build ./...` and the corresponding `rtk go vet ./...` — passed.
+- `rtk proxy openspec validate add-user-status-management --strict`, `git diff --check`, untracked whitespace and changed-Go gofmt checks — passed.
+- Apply-start hash audit and scoped diff review preserved unrelated working-tree content, main specs/archive, Graphify artifacts, dependencies/env and existing contract/registry behavior. No sibling, Git history, Docker or deployment changes.
+- HTTP fake SDK and TLS bufconn verification are controlled transport/orchestration checks. Real backend transaction/safety/replay persistence and rollout were not exercised.
