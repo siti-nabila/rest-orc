@@ -8,8 +8,10 @@ import (
 	"testing"
 	"time"
 
+	applicationv1 "github.com/siti-nabila/api-contracts/pb/application/v1"
 	authv1 "github.com/siti-nabila/api-contracts/pb/auth/v1"
 	profilev1 "github.com/siti-nabila/api-contracts/pb/profile/v1"
+	rolev1 "github.com/siti-nabila/api-contracts/pb/role/v1"
 	sessionv1 "github.com/siti-nabila/api-contracts/pb/session/v1"
 	userv1 "github.com/siti-nabila/api-contracts/pb/user/v1"
 	"github.com/siti-nabila/rest-orc/internal/client/authservice"
@@ -78,6 +80,8 @@ func newTransport(t *testing.T, cfg config.GRPCClientConfig, serverTLS *tls.Conf
 	}
 	h.server = grpc.NewServer(options...)
 	userv1.RegisterUserServiceServer(h.server, &mocks.Server{})
+	applicationv1.RegisterApplicationServiceServer(h.server, &mocks.ApplicationServer{})
+	rolev1.RegisterRoleServiceServer(h.server, &mocks.RoleServer{})
 	profilev1.RegisterProfileServiceServer(h.server, &mocks.ProfileServer{})
 	authv1.RegisterAuthServiceServer(h.server, &mocks.PasswordServer{})
 	sessionv1.RegisterSessionServiceServer(h.server, &mocks.SelfSessionServer{})

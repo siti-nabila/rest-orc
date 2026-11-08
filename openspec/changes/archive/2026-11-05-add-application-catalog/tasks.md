@@ -1,0 +1,36 @@
+# Tasks
+
+## 1. Applications-owned contracts and query validation
+
+- [x] 1.1 Add applications-owned actor, raw/typed query, five-field application, two-field option and int64 ApplicationPage DTOs without Fiber/protobuf/concrete client imports; add root `test/features/applications/domain` runner/scenarios verifying exact item/page JSON fields, numeric ID versus code identity, []/false values, totals above int32 and independent input collections.
+- [x] 1.2 Implement the five supported query controls, positive decimal page/limit/defaults, ACTIVE/DISABLED canonical CSV, raw ASCII keyword validation/normalization, unsupported controls and 2048-byte opaque cursor policy; add deterministic domain scenarios for valid bounds/leading zeros, duplicate keys, forbidden bytes, whitespace-only search, independent EN/ID/ZH field errors and direct typed-query validation. Add only necessary dictionary-backed validation entries, document query rules in README and run the applications domain runner.
+
+## 2. Compatible ApplicationService client seam
+
+- [x] 2.1 Add the one-method ApplicationCatalogService and additive NewWithApplicationCatalogService after NewWithUserRoleManagementService, plus its field/default SDK on the current transport in NewWithSelfSessionService; add client mocks/scenarios verifying nil dependency guard precedence and old constructor compatibility/defaults without widening existing interfaces, and document constructor ownership with focused comments.
+- [x] 2.2 Add ListApplications in `internal/client/authservice/application_client.go` with nil context/request/response guards, RequestContext/deferred cancellation and original error identity; add client scenarios for one exact SDK invocation, unchanged request/result identity, earlier parent/client deadlines, cancellation and safe unused dictionary codes for internal guards, then run `test/client/authservice` runners.
+
+## 3. Application catalog gateway and safe mapping
+
+- [x] 3.1 Add explicitly named ApplicationCatalogGateway/Client under applications `gateway/authservice`, mapping one full-projection request with id DESC, logical keyword/FULL_TEXT_TRIGRAM, canonical statuses and opaque cursor; add gateway scenarios verifying exact payload, omitted filters/search, copied metadata with inherited mutation preconditions removed, parent/filter ownership and one call without lookup/retry.
+- [x] 3.2 Map five-field application rows and int64 page metadata, preserving stored text/system flags/order and [] on empty/nonzero-total pages; add gateway scenarios for nil/malformed page/items, invalid IDs/status, no partial output, independent slices, error identity and context termination, then run the gateway runner. Document in README the safe fields, large-total behavior, historical text policy and absence of version/description/access/permission enrichment.
+
+## 4. Exact permission read usecase
+
+- [x] 4.1 Add one ApplicationCatalogList usecase with an applications-owned small gateway contract, authorizing invalid identity/restriction/exact iam.permission.read before query validation and returning an independent item slice; add root usecase scenarios for permission-only non-admin success, false/missing/wildcard/prefix/unrelated grants, invalid-input precedence, nil dependency/context, zero-or-one dispatch, backend denial and result isolation. Document permission separation and informational catalog semantics in README, then run the usecase runner.
+
+## 5. REST representations route composition and browser policy
+
+- [x] 5.1 Add ApplicationCatalogHandler directly under applications `handler/`, using the same read usecase for list/options and exactly value=code plus label=`code - name` for options; add handler scenarios verifying constructor guards, principal/context/query sources, repeated raw query capture, exact messages/fields, historical text/empty-name labels, metadata parity, body/precondition tolerance, safe errors and standalone no-store with no cookie/token effects. Document the two response shapes and option identity in README and run the handler runner.
+- [x] 5.2 Add `internal/app/applications_routes.go` and feature registration for only GET `/api/v1/applications` and `/api/v1/applications/options`, with explicit names and one authentication middleware; extend early LifecycleNoStore matching and the shared fake-app fixture. Add app/browser scenarios verifying exact route inventory, absent detail/mutation/unversioned aliases, API-prefix/casing/trailing-slash no-store behavior, allowed zero-RPC preflight, denied Origin/missing bearer, and unchanged existing public/users/catalog/assignment policies. Update the README route table and run app/browser runners.
+- [x] 5.3 Add controlled fake-backed `test/integration/applications` HTTP flows for both representations, asserting Me then one ListApplications, authorization before business validation, query/cursor equivalence, exact labels/fields, totals/empty pages, all-or-nothing malformed success, backend current denial, structured errors/unknown-Reason fallback/Retry-After and 504/499 behavior; verify no extra lookup/provisioning or cookie effects. Add curl/query/response examples, cursor-reset and ACTIVE-filter guidance to README, verify examples against the HTTP scenarios and run the integration runner.
+
+## 6. Shared TLS wire contract and concurrent isolation
+
+- [x] 6.1 Add a generated ApplicationServer fixture implementing ListApplications only and register ApplicationService exactly once on the existing authservice controlled TLS server; add wire scenarios for both HTTP representations, asserting exact method/protobuf query, one reused verified connection, original bearer, exactly one environment credential, safe locale/request ID/copied metadata, deadline/cancellation/cleanup and no new dependencies/configuration. Run `test/integration/authservice` runners and retain existing service registrations.
+- [x] 6.2 Add barrier-controlled mixed application list/options and role/user/assignment/public requests with distinct actors/queries/cursors/codes/text/system flags/totals/locale/errors, verifying per-request ordering and isolated browser effects; run targeted race tests across affected applications/client/app/browser/integration packages. Document existing backend method/IAM/catalog permission prerequisites and selection-versus-access distinction in README; verify tests need neither Docker nor a live backend.
+
+## 7. Cross-cutting verification and scope audit
+
+- [x] 7.1 Format changed Go files and run focused affected runners followed by `GOWORK=off GOCACHE=/tmp/rest-orc-go-cache rtk go test ./...`, full build and vet using RTK where supported; record actual results and targeted race evidence, and resolve failures attributable to this change without broadening scope.
+- [x] 7.2 Run `openspec validate add-application-catalog --strict`, review full diff/status and `git diff --check`, and map all specification scenarios to delivered tests/README; verify root-only authored tests, explicit new type names without Graphify collisions, no generated/dependency/configuration/sibling edits, preserved previous working-tree changes and exactly the two authorized routes/one business RPC. Report results and material limitations without archiving, committing or deploying.

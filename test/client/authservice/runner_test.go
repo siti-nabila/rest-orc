@@ -34,3 +34,15 @@ func TestUserProfile(t *testing.T) { testutils.RunScenarios(t, test_scenarios.Us
 func TestUserCreation(t *testing.T) {
 	testutils.RunScenarios(t, test_scenarios.UserCreationScenarios())
 }
+
+func TestRoleCatalog(t *testing.T) { testutils.RunScenarios(t, test_scenarios.RoleCatalogScenarios()) }
+
+func TestUserRoles(t *testing.T) { testutils.RunScenarios(t, test_scenarios.UserRoleScenarios()) }
+
+func TestApplicationCatalog(t *testing.T) {
+	testutils.RunScenarios(t, test_scenarios.ApplicationCatalogScenarios())
+}
+
+func TestUserApplicationAccess(t *testing.T) {
+	testutils.RunScenarios(t, test_scenarios.UserApplicationAccessScenarios())
+}

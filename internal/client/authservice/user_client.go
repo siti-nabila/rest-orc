@@ -161,3 +161,104 @@ func (c *Client) CreateUser(ctx context.Context, request *userv1.CreateUserReque
 	}
 	return result, nil
 }
+
+// UserRoleManagementService keeps assignment RPCs separate from existing SDK consumers.
+type UserRoleManagementService interface {
+	ListUserRoles(context.Context, *userv1.ListUserRolesRequest, ...grpc.CallOption) (*userv1.ListUserRolesResponse, error)
+	GrantUserRoles(context.Context, *userv1.GrantUserRolesRequest, ...grpc.CallOption) (*userv1.GrantUserRolesResponse, error)
+	RevokeUserRoles(context.Context, *userv1.RevokeUserRolesRequest, ...grpc.CallOption) (*userv1.RevokeUserRolesResponse, error)
+}
+
+// NewWithUserRoleManagementService preserves the previous constructor guards and defaults.
+func NewWithUserRoleManagementService(transport *grpcclient.Client, service Service, profile ProfileService, password PasswordService, session SessionService, self SelfSessionService, admin AdminSessionService, detail UserDetailService, status UserStatusService, userProfile UserProfileService, creation UserCreationService, roles RoleCatalogService, assignments UserRoleManagementService) (*Client, error) {
+	c, err := NewWithRoleCatalogService(transport, service, profile, password, session, self, admin, detail, status, userProfile, creation, roles)
+	if err != nil {
+		return nil, err
+	}
+	if assignments == nil {
+		return nil, dictionary.ErrUserRoleManagementServiceRequired
+	}
+	c.userRoleManagementService = assignments
+	return c, nil
+}
+
+func (c *Client) ListUserRoles(ctx context.Context, r *userv1.ListUserRolesRequest) (*userv1.ListUserRolesResponse, error) {
+	if ctx == nil {
+		return nil, dictionary.ErrGRPCAuthRequestContextRequired
+	}
+	if r == nil {
+		return nil, dictionary.ErrListUserRolesRequestRequired
+	}
+	child, cancel := c.transport.RequestContext(ctx)
+	defer cancel()
+	out, err := c.userRoleManagementService.ListUserRoles(child, r)
+	if err != nil {
+		return nil, err
+	}
+	if out == nil {
+		return nil, dictionary.ErrListUserRolesResponseRequired
+	}
+	return out, nil
+}
+
+func (c *Client) GrantUserRoles(ctx context.Context, r *userv1.GrantUserRolesRequest) (*userv1.GrantUserRolesResponse, error) {
+	if ctx == nil {
+		return nil, dictionary.ErrGRPCAuthRequestContextRequired
+	}
+	if r == nil {
+		return nil, dictionary.ErrGrantUserRolesRequestRequired
+	}
+	child, cancel := c.transport.RequestContext(ctx)
+	defer cancel()
+	out, err := c.userRoleManagementService.GrantUserRoles(child, r)
+	if err != nil {
+		return nil, err
+	}
+	if out == nil {
+		return nil, dictionary.ErrGrantUserRolesResponseRequired
+	}
+	return out, nil
+}
+
+func (c *Client) RevokeUserRoles(ctx context.Context, r *userv1.RevokeUserRolesRequest) (*userv1.RevokeUserRolesResponse, error) {
+	if ctx == nil {
+		return nil, dictionary.ErrGRPCAuthRequestContextRequired
+	}
+	if r == nil {
+		return nil, dictionary.ErrRevokeUserRolesRequestRequired
+	}
+	child, cancel := c.transport.RequestContext(ctx)
+	defer cancel()
+	out, err := c.userRoleManagementService.RevokeUserRoles(child, r)
+	if err != nil {
+		return nil, err
+	}
+	if out == nil {
+		return nil, dictionary.ErrRevokeUserRolesResponseRequired
+	}
+	return out, nil
+}
+
+// UserApplicationAccessService isolates user access history from other UserService consumers.
+type UserApplicationAccessService interface {
+	ListUserApplicationAccess(context.Context, *userv1.ListUserApplicationAccessRequest, ...grpc.CallOption) (*userv1.ListUserApplicationAccessResponse, error)
+}
+
+func (c *Client) ListUserApplicationAccess(ctx context.Context, r *userv1.ListUserApplicationAccessRequest) (*userv1.ListUserApplicationAccessResponse, error) {
+	if ctx == nil {
+		return nil, dictionary.ErrGRPCAuthRequestContextRequired
+	}
+	if r == nil {
+		return nil, dictionary.ErrListUserApplicationAccessRequestRequired
+	}
+	child, cancel := c.transport.RequestContext(ctx)
+	defer cancel()
+	out, err := c.userApplicationAccessService.ListUserApplicationAccess(child, r)
+	if err != nil {
+		return nil, err
+	}
+	if out == nil {
+		return nil, dictionary.ErrListUserApplicationAccessResponseRequired
+	}
+	return out, nil
+}

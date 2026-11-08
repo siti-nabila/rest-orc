@@ -244,9 +244,16 @@ func LifecycleNoStore(apiPrefix string) fiber.Handler {
 		adminSession := target != path && (len(segments) == 2 || len(segments) == 3) && segments[1] == "sessions"
 		userDetail := target != path && len(segments) == 1 && segments[0] != ""
 		userStatus := target != path && len(segments) == 2 && segments[1] == "status"
+		userRoles := target != path && (len(segments) == 2 && segments[1] == "roles" || len(segments) == 3 && segments[1] == "roles" && (segments[2] == "grant" || segments[2] == "revoke"))
+		userApplicationAccess := target != path && (len(segments) == 2 && segments[1] == "applications" || len(segments) == 4 && segments[1] == "applications" && (segments[3] == "grant" || segments[3] == "revoke"))
 		userProfile := target != path && len(segments) == 2 && segments[1] == "profile"
 		creation := path == strings.ToLower(apiPrefix)+"/users" && (ctx.Method() == fiber.MethodPost || ctx.Method() == fiber.MethodOptions && strings.EqualFold(ctx.Get(fiber.HeaderAccessControlRequestMethod), fiber.MethodPost))
-		if creation || paths[path] || path == sessions || strings.HasPrefix(path, sessions+"/") || adminSession || userDetail || userStatus || userProfile {
+		roles := strings.ToLower(apiPrefix) + "/roles"
+		roleTarget := strings.TrimPrefix(path, roles+"/")
+		roleCatalog := path == roles || roleTarget != path && roleTarget != "" && !strings.Contains(roleTarget, "/")
+		applications := strings.ToLower(apiPrefix) + "/applications"
+		applicationCatalog := path == applications || path == applications+"/options"
+		if userApplicationAccess || applicationCatalog || userRoles || roleCatalog || creation || paths[path] || path == sessions || strings.HasPrefix(path, sessions+"/") || adminSession || userDetail || userStatus || userProfile {
 			ctx.Set(fiber.HeaderCacheControl, "no-store")
 		}
 		return ctx.Next()

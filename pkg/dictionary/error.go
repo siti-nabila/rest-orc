@@ -105,3 +105,51 @@ var (
 	ErrCreateUserRequestRequired   = errorPack.New("create_user_request_required")
 	ErrCreateUserResponseRequired  = errorPack.New("create_user_response_required")
 )
+
+var (
+	ErrRolesUseCaseGatewayRequired = errorPack.New("roles_usecase_gateway_required")
+	ErrRolesGatewayClientRequired  = errorPack.New("roles_gateway_client_required")
+	ErrRolesGatewayContextRequired = errorPack.New("roles_gateway_context_required")
+	ErrRolesHandlerUseCaseRequired = errorPack.New("roles_handler_usecase_required")
+	ErrRolesHandlerWriterRequired  = errorPack.New("roles_handler_writer_required")
+)
+
+var (
+	ErrRoleCatalogServiceRequired = errorPack.New("role_catalog_service_required")
+	ErrListRolesRequestRequired   = errorPack.New("list_roles_request_required")
+	ErrListRolesResponseRequired  = errorPack.New("list_roles_response_required")
+	ErrGetRoleRequestRequired     = errorPack.New("get_role_request_required")
+	ErrGetRoleResponseRequired    = errorPack.New("get_role_response_required")
+)
+
+var (
+	ErrUserRoleManagementServiceRequired = errorPack.New("user_role_management_service_required")
+	ErrListUserRolesRequestRequired      = errorPack.New("list_user_roles_request_required")
+	ErrListUserRolesResponseRequired     = errorPack.New("list_user_roles_response_required")
+	ErrGrantUserRolesRequestRequired     = errorPack.New("grant_user_roles_request_required")
+	ErrGrantUserRolesResponseRequired    = errorPack.New("grant_user_roles_response_required")
+	ErrRevokeUserRolesRequestRequired    = errorPack.New("revoke_user_roles_request_required")
+	ErrRevokeUserRolesResponseRequired   = errorPack.New("revoke_user_roles_response_required")
+)
+
+var (
+	ErrApplicationCatalogServiceRequired  = errorPack.New("application_catalog_service_required")
+	ErrListApplicationsRequestRequired    = errorPack.New("list_applications_request_required")
+	ErrListApplicationsResponseRequired   = errorPack.New("list_applications_response_required")
+	ErrApplicationsUseCaseGatewayRequired = errorPack.New("applications_usecase_gateway_required")
+	ErrApplicationsGatewayClientRequired  = errorPack.New("applications_gateway_client_required")
+	ErrApplicationsGatewayContextRequired = errorPack.New("applications_gateway_context_required")
+	ErrApplicationsHandlerUseCaseRequired = errorPack.New("applications_handler_usecase_required")
+	ErrApplicationsHandlerWriterRequired  = errorPack.New("applications_handler_writer_required")
+)
+
+var (
+	ErrUserApplicationAccessServiceRequired      = errorPack.New("user_application_access_service_required")
+	ErrApplicationAccessServiceRequired          = errorPack.New("application_access_service_required")
+	ErrListUserApplicationAccessRequestRequired  = errorPack.New("list_user_application_access_request_required")
+	ErrListUserApplicationAccessResponseRequired = errorPack.New("list_user_application_access_response_required")
+	ErrGrantApplicationAccessRequestRequired     = errorPack.New("grant_application_access_request_required")
+	ErrGrantApplicationAccessResponseRequired    = errorPack.New("grant_application_access_response_required")
+	ErrRevokeApplicationAccessRequestRequired    = errorPack.New("revoke_application_access_request_required")
+	ErrRevokeApplicationAccessResponseRequired   = errorPack.New("revoke_application_access_response_required")
+)

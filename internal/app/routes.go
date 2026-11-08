@@ -61,5 +61,11 @@ func registerFeatureRoutes(
 		return err
 	}
 
-	return registerUsersRoutes(routes, meRoutes, dependencies.authClient, dependencies.responseWriter)
+	if err := registerUsersRoutes(routes, meRoutes, dependencies.authClient, dependencies.responseWriter); err != nil {
+		return err
+	}
+	if err := registerRolesRoutes(routes, dependencies.authClient, dependencies.responseWriter); err != nil {
+		return err
+	}
+	return registerApplicationsRoutes(routes, dependencies.authClient, dependencies.responseWriter)
 }

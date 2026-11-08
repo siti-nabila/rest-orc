@@ -50,3 +50,17 @@ func (*Server) CreateUser(_ context.Context, r *userv1.CreateUserRequest) (*user
 	user.Status = r.GetStatus()
 	return &userv1.CreateUserResponse{User: user}, nil
 }
+
+func (*Server) ListUserRoles(_ context.Context, r *userv1.ListUserRolesRequest) (*userv1.ListUserRolesResponse, error) {
+	return fixtures.UserRoleList(r.UserId), nil
+}
+func (*Server) GrantUserRoles(_ context.Context, r *userv1.GrantUserRolesRequest) (*userv1.GrantUserRolesResponse, error) {
+	return &userv1.GrantUserRolesResponse{UserId: r.UserId, Version: r.GetExpectedUserVersion()}, nil
+}
+func (*Server) RevokeUserRoles(_ context.Context, r *userv1.RevokeUserRolesRequest) (*userv1.RevokeUserRolesResponse, error) {
+	return &userv1.RevokeUserRolesResponse{UserId: r.UserId, Version: r.GetExpectedUserVersion()}, nil
+}
+
+func (*Server) ListUserApplicationAccess(_ context.Context, r *userv1.ListUserApplicationAccessRequest) (*userv1.ListUserApplicationAccessResponse, error) {
+	return fixtures.UserAccessHistory(r.UserId), nil
+}
